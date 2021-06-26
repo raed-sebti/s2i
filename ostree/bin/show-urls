@@ -1,0 +1,1 @@
+for i in blob/lab-env.tgz   *.html unguided/*  ; do echo https://training.nuncomputing.com/openshift-dev/$i ; done
