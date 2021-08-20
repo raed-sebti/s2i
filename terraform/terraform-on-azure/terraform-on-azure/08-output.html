@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html>
+  <title>Guided Exercise: Output variables</title>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="strapdown/themes/Dark Mode.min.css">
+  <link rel="stylesheet" href="strapdown/themes/Light Mode.min.css">  
+  <xmp theme="superhero" style="display:none;" toc="true">
+      
+
+
+In this exercise, you will practice outputting variables.
+
+Resource instances managed by Terraform each export attributes whose values can be used elsewhere in configuration. Output values are a way to expose some of that information to the user of your module.
+
+
+Output values are like the return values of a Terraform module, and have several uses:
+
+  - A child module can use outputs to expose a subset of its resource attributes to a parent module.
+  - A root module can use outputs to print certain values in the CLI output after running terraform apply.
+  - When using remote state, root module outputs can be accessed by other configurations via a terraform_remote_state data source.
+
+#Outcomes
+
+You should be able to:
+- Output variables
+
+#Steps
+
+1. In this lab, we will make use of a provider called `random`. It will generates for us some random ids, so we can use output variables later on to display them on the console!
+
+  ```
+  vi main.tf
+  ```
+  ```
+  resource "random_uuid" "id1" {
+   
+  }
+  resource "random_uuid" "id2" {
+     
+  }
+  resource "random_uuid" "id3" {
+     
+  }
+  resource "random_uuid" "id4" {
+     
+  }
+  resource "random_uuid" "id5" {
+     
+  }
+  resource "random_uuid" "id6" {
+     
+  }
+  resource "random_uuid" "id7" {
+     
+  }
+  resource "random_integer" "order1" {
+    min     = 1
+    max     = 99999
+   
+  }
+  resource "random_integer" "order2" {
+    min     = 1
+    max     = 222222
+   
+  }
+  ```
+  Let's now declare all the variables that we want to output values for! It can be done this way:
+  ```
+  vi output.tf
+  ```
+  ```
+  output "id1" {
+    value = random_uuid.id1.result
+  }
+  output "id2" {
+     value = random_uuid.id2.result
+    
+  }
+  output "id3" {
+     value = random_uuid.id3.result 
+  }
+  output "id4" {
+     value = random_uuid.id4.result
+    
+  }
+  output "id5" {
+     value = random_uuid.id5.result
+  }
+    
+  output "id6" {
+     value = random_uuid.id6.result
+    
+  }
+  output "id7" {
+     value = random_uuid.id7.result   
+  }
+  output "order1" {
+  value = random_integer.order1.result
+  
+  }
+  output "order2" {
+  value = random_integer.order1.result
+  }
+  ```
+  Then, let's initialize our project!
+  ```
+  terraform init 
+  ```
+  ```
+  Initializing provider plugins...
+  - Finding latest version of hashicorp/random...
+  - Installing hashicorp/random v3.1.0...
+  - Installed hashicorp/random v3.1.0 (self-signed, key ID 34365D9472D7468F)
+  
+  Partner and community providers are signed by their developers.
+  If you'd like to know more about provider signing, you can read about it here:
+  https://www.terraform.io/docs/plugins/signing.html
+  
+  The following providers do not have any version constraints in configuration,
+  so the latest version was installed.
+  
+  To prevent automatic upgrades to new major versions that may contain breaking
+  changes, we recommend adding version constraints in a required_providers block
+  in your configuration, with the constraint strings suggested below.
+  
+  * hashicorp/random: version = "~> 3.1.0"
+  
+  Terraform has been successfully initialized!
+  
+  You may now begin working with Terraform. Try running "terraform plan" to see
+  any changes that are required for your infrastructure. All Terraform commands
+  should now work.
+  
+  If you ever set or change modules or backend configuration for Terraform,
+  rerun this command to reinitialize your working directory. If you forget, other
+  commands will detect it and remind you to do so if necessary.
+  ```
+  ```
+  terraform plan
+  ```
+  ```
+  Refreshing Terraform state in-memory prior to plan...
+  The refreshed state will be used to calculate this plan, but will not be
+  persisted to local or remote state storage.
+  
+  ------------------------------------------------------------------------
+  
+  An execution plan has been generated and is shown below.
+  Resource actions are indicated with the following symbols:
+    + create
+  
+  Terraform will perform the following actions:
+  
+    # random_integer.order1 will be created
+    + resource "random_integer" "order1" {
+        + id     = (known after apply)
+        + max    = 99999
+        + min    = 1
+        + result = (known after apply)
+      }
+  
+    # random_integer.order2 will be created
+    + resource "random_integer" "order2" {
+        + id     = (known after apply)
+        + max    = 222222
+        + min    = 1
+        + result = (known after apply)
+      }
+  
+    # random_uuid.id1 will be created
+    + resource "random_uuid" "id1" {
+        + id     = (known after apply)
+        + result = (known after apply)
+      }
+  
+    # random_uuid.id2 will be created
+    + resource "random_uuid" "id2" {
+        + id     = (known after apply)
+        + result = (known after apply)
+      }
+  
+    # random_uuid.id3 will be created
+    + resource "random_uuid" "id3" {
+        + id     = (known after apply)
+        + result = (known after apply)
+      }
+  
+    # random_uuid.id4 will be created
+    + resource "random_uuid" "id4" {
+        + id     = (known after apply)
+        + result = (known after apply)
+      }
+  
+    # random_uuid.id5 will be created
+    + resource "random_uuid" "id5" {
+        + id     = (known after apply)
+        + result = (known after apply)
+      }
+  
+    # random_uuid.id6 will be created
+    + resource "random_uuid" "id6" {
+        + id     = (known after apply)
+        + result = (known after apply)
+      }
+  
+    # random_uuid.id7 will be created
+    + resource "random_uuid" "id7" {
+        + id     = (known after apply)
+        + result = (known after apply)
+      }
+  
+  Plan: 9 to add, 0 to change, 0 to destroy.
+  
+  ------------------------------------------------------------------------
+  
+  Note: You didn't specify an "-out" parameter to save this plan, so Terraform
+  can't guarantee that exactly these actions will be performed if
+  "terraform apply" is subsequently run.
+  ```
+  ```
+  terraform apply
+  ```
+  As we can see, the results are printed out as an `Outputs` section in the end of the terraform apply command:
+  ```
+  An execution plan has been generated and is shown below.
+  Resource actions are indicated with the following symbols:
+    + create
+  
+  Terraform will perform the following actions:
+  
+    # random_integer.order1 will be created
+    + resource "random_integer" "order1" {
+        + id     = (known after apply)
+        + max    = 99999
+        + min    = 1
+        + result = (known after apply)
+      }
+  
+    # random_integer.order2 will be created
+    + resource "random_integer" "order2" {
+        + id     = (known after apply)
+        + max    = 222222
+        + min    = 1
+        + result = (known after apply)
+      }
+  
+    # random_uuid.id1 will be created
+    + resource "random_uuid" "id1" {
+        + id     = (known after apply)
+        + result = (known after apply)
+      }
+  
+    # random_uuid.id2 will be created
+    + resource "random_uuid" "id2" {
+        + id     = (known after apply)
+        + result = (known after apply)
+      }
+  
+    # random_uuid.id3 will be created
+    + resource "random_uuid" "id3" {
+        + id     = (known after apply)
+        + result = (known after apply)
+      }
+  
+    # random_uuid.id4 will be created
+    + resource "random_uuid" "id4" {
+        + id     = (known after apply)
+        + result = (known after apply)
+      }
+  
+    # random_uuid.id5 will be created
+    + resource "random_uuid" "id5" {
+        + id     = (known after apply)
+        + result = (known after apply)
+      }
+  
+    # random_uuid.id6 will be created
+    + resource "random_uuid" "id6" {
+        + id     = (known after apply)
+        + result = (known after apply)
+      }
+  
+    # random_uuid.id7 will be created
+    + resource "random_uuid" "id7" {
+        + id     = (known after apply)
+        + result = (known after apply)
+      }
+  
+  Plan: 9 to add, 0 to change, 0 to destroy.
+  
+  Do you want to perform these actions?
+    Terraform will perform the actions described above.
+    Only 'yes' will be accepted to approve.
+  
+    Enter a value: yes
+  
+  random_uuid.id7: Creating...
+  random_uuid.id5: Creating...
+  random_uuid.id2: Creating...
+  random_integer.order1: Creating...
+  random_integer.order2: Creating...
+  random_uuid.id6: Creating...
+  random_uuid.id3: Creating...
+  random_uuid.id7: Creation complete after 0s [id=17d73751-0009-61d3-fdab-7df6f6f7a587]
+  random_uuid.id4: Creating...
+  random_uuid.id2: Creation complete after 0s [id=6fe116b6-f0d7-60be-0efd-952e209cf678]
+  random_integer.order2: Creation complete after 0s [id=178677]
+  random_uuid.id3: Creation complete after 0s [id=8180a248-b4ec-4e8d-2a78-d18ac24997c5]
+  random_uuid.id1: Creating...
+  random_uuid.id5: Creation complete after 0s [id=69e08a0f-cf45-9335-7475-8688804cf745]
+  random_integer.order1: Creation complete after 0s [id=88627]
+  random_uuid.id6: Creation complete after 0s [id=c2930cee-3b16-9780-fddb-e49ae1526a0a]
+  random_uuid.id1: Creation complete after 0s [id=6c73f65e-f990-44b1-d2bf-893d7d09f243]
+  random_uuid.id4: Creation complete after 0s [id=e899f0da-7019-88b3-9d6e-4f1ab9bba9e8]
+  
+  Apply complete! Resources: 9 added, 0 changed, 0 destroyed.
+  
+  Outputs:
+  
+  id1 = 6c73f65e-f990-44b1-d2bf-893d7d09f243
+  id2 = 6fe116b6-f0d7-60be-0efd-952e209cf678
+  id3 = 8180a248-b4ec-4e8d-2a78-d18ac24997c5
+  id4 = e899f0da-7019-88b3-9d6e-4f1ab9bba9e8
+  id5 = 69e08a0f-cf45-9335-7475-8688804cf745
+  id6 = c2930cee-3b16-9780-fddb-e49ae1526a0a
+  id7 = 17d73751-0009-61d3-fdab-7df6f6f7a587
+  order1 = 88627
+  order2 = 88627
+  ```
+  We can use the `output` command in order to display only the variables!
+  ```
+  terraform output
+  ```
+  ```
+  id1 = 6c73f65e-f990-44b1-d2bf-893d7d09f243
+  id2 = 6fe116b6-f0d7-60be-0efd-952e209cf678
+  id3 = 8180a248-b4ec-4e8d-2a78-d18ac24997c5
+  id4 = e899f0da-7019-88b3-9d6e-4f1ab9bba9e8
+  id5 = 69e08a0f-cf45-9335-7475-8688804cf745
+  id6 = c2930cee-3b16-9780-fddb-e49ae1526a0a
+  id7 = 17d73751-0009-61d3-fdab-7df6f6f7a587
+  order1 = 88627
+  order2 = 88627
+  ```
+5. Cleanup
+
+  Let's now cleanup all the resources that we've created!
+  ```
+  terraform destroy
+  ```
+6. Terraform on Azure 
+  - Creating Terraform configuration folder
+  - Terraform configuration file have `.tf` extension. 
+  - Terraform command needs to run in the directory of the config files. 
+  - It can’t take files from subdirectories.
+
+  ```
+  mkdir ~/output-project  && cd ~/output-project 
+  ```  
+1. c1-versions.tf
+  ``` 
+  # Terraform Block
+  terraform {
+    required_version = ">= 1.0.0"
+    required_providers {
+      azurerm = {
+        source = "hashicorp/azurerm"
+        version = ">= 2.0" 
+      }
+    }
+  }
+
+  # Provider Block
+  provider "azurerm" {
+  features {}          
+  }  
+  ``` 
+1. c2-variables.tf
+  ``` 
+  # Input Variables
+
+  # 1. Business Unit Name
+  variable "business_unit" {
+    description = "Business Unit Name"
+    type = string
+    default = "hr"
+  }
+  # 2. Environment Name
+  variable "environment" {
+    description = "Environment Name"
+    type = string
+    default = "poc"
+  }
+  # 3. Resource Group Name
+  variable "resoure_group_name" {
+    description = "Resource Group Name"
+    type = string
+    default = "myrg"
+  }
+  # 4. Resource Group Location
+  variable "resoure_group_location" {
+    description = "Resource Group Location"
+    type = string
+    default = "East US"
+  }
+
+  # 5. Virtual Network Name
+  variable "virtual_network_name" {
+    description = "Virtual Network Name"
+    type = string 
+    default = "myvnet"
+  }  
+  ``` 
+1. c3-resource-group.tf
+  ``` 
+  # Resource-1: Azure Resource Group
+  resource "azurerm_resource_group" "myrg" {
+    name = "${var.business_unit}-${var.environment}-${var.resoure_group_name}"
+    location = var.resoure_group_location
+  }  
+  ``` 
+1. c4-virtual-network.tf
+  ``` 
+  # Create Virtual Network
+  resource "azurerm_virtual_network" "myvnet" {
+    name                = "${var.business_unit}-${var.environment}-${var.virtual_network_name}"
+    address_space       = ["10.0.0.0/16"]
+    location            = azurerm_resource_group.myrg.location
+    resource_group_name = azurerm_resource_group.myrg.name
+  }  
+  ``` 
+1. terraform.tfvars
+  ```
+  business_unit = "it"
+  environment = "dev"
+  resoure_group_name = "rg"
+  virtual_network_name = "vnet"  
+  ```
+1. c5-outputs.tf
+  ```
+  # 1. Output Values - Resource Group
+  output "resource_group_id" {
+    description = "Resource Group ID"
+    # Atrribute Reference
+    value = azurerm_resource_group.myrg.id 
+  }
+  output "resource_group_name" {
+    description = "Resource Group name"
+    # Argument Reference
+    value = azurerm_resource_group.myrg.name  
+  }
+
+  # 2. Output Values - Virtual Network
+  output "virtual_network_name" {
+    description = "Virutal Network Name"
+    value = azurerm_virtual_network.myvnet.name 
+  }  
+  ```
+1. Execute Terraform Commands
+  ```
+  # Initialize Terraform
+  terraform init
+
+  # Validate Terraform configuration files
+  terraform validate
+
+  # Format Terraform configuration files
+  terraform fmt
+
+  # Review the terraform plan
+  terraform plan 
+
+  # Create Resources
+  terraform apply -auto-approve
+
+  # Observation
+  1. Review the outputs in CLI Output
+  ```
+1. Query Terraform Outputs
+  - Terraform will load the project state in state file, so that using terraform output command we can query the state file.
+  ``` 
+  # Terraform Output Commands
+  terraform output
+  terraform output resource_group_id
+  terraform output virtual_network_name  
+  ```
+1. Output Values - Suppressing Sensitive Values in Output
+- We can redact the sensitive outputs using sensitve = true in output block
+- This will only redact the cli output for terraform plan and apply
+- When you query using terraform output, you will be able to fetch exact values from terraform.tfstate files
+- Add sensitve = true for output virtual_network_name
+  ```
+  # 2. Output Values - Virtual Network
+  output "virtual_network_name" {
+    description = "Virutal Network Name"
+    value = azurerm_virtual_network.myvnet.name 
+    sensitive = true
+  }
+  ```
+- Test the flow
+  ```
+  # Terraform Apply
+  terraform apply -auto-approve
+  Observation: 
+  1. You should see the value as sensitive
+
+  # Query using terraform output
+  terraform output virtual_network_name
+  Observation: 
+  1. You should get non-redacted original value from terraform.tfstate file  
+  ```
+1. Generate machine-readable output
+  ```
+  # Generate machine-readable output
+  terraform output -json  
+  ```
+1. Destroy Resources
+  ```
+  # Destroy Resources
+  terraform destroy -auto-approve
+
+  # Clean-Up
+  rm -rf .terraform*
+  rm -rf terraform.tfstate*
+
+  # Comment sensitive=true
+  In c5-outputs.tf, roll back "sensitive=true"  
+  ```
+</xmp>
+   <script src="strapdown/strapdown.min.js"></script>
+</html>
+<!--
+Local Variables:
+mode: markdown
+End:
+->

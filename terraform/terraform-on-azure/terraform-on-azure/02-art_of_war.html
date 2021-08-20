@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html>
+  <title>Guided Exercise: Art of wars </title>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="strapdown/themes/Dark Mode.min.css">
+  <link rel="stylesheet" href="strapdown/themes/Light Mode.min.css">  
+  <xmp theme="superhero" style="display:none;" toc="true">
+
+
+In this exercise, you will learn more about the terraform lifecycle and the local provider.
+
+#Outcomes
+You should be able to
+- Write Terraform configuration files 
+- Initialize Terraform with terraform init
+- Deploy a local file using a local provider
+- Cleaning-up with terraform destroy
+    
+  
+#Steps
+
+<h4>Writing the Terraform Configuration Files</h4>
+
+1. Create a art_of_war directory
+
+  Let’s get started by creating a new workspace for Terraform. This can be any folder on your computer, as long as it doesn’t contain Terraform configuration files:
+
+  ```
+  mkdir art_of_war && cd art_of_war
+  ```
+
+2. In this folder, make a new file called `main.tf` and insert the following code:
+  ```
+  vi main.tf
+  ```
+  ```
+  terraform {
+        required_version = "~> 1.0.0"
+        required_providers {
+            local = "~> 1.2"
+          }
+  }
+  resource "local_file" "literature" {
+        content  = <<-EOT
+            Sun Tzu said: The art of war is of vital importance to the State.
+            It is a matter of life and death, a road either to safety or to
+            ruin. Hence it is a subject of inquiry which can on no account be
+            neglected.
+          EOT
+        filename = "art_of_war.txt"
+  }
+  ```
+
+<h4>Initializing the Workspace</h4>
+
+1. Initialize Terraform
+  
+  At this point, Terraform isn’t aware of your workspace,because it hasn’t been initialized yet. 
+
+  Let’s fix that by running a ` terraform init ` The command and output are shown below:
+  ```
+  terraform init
+  ```
+  ```
+  Initializing the backend...
+
+  Initializing provider plugins...
+  - Finding hashicorp/local versions matching "~> 1.2"...
+  - Installing hashicorp/local v1.4.0...
+  - Installed hashicorp/local v1.4.0 (signed by HashiCorp)
+  
+  Terraform has been successfully initialized!
+  
+  You may now begin working with Terraform. Try running "terraform plan" to see
+  any changes that are required for your infrastructure. All Terraform commands
+  should now work.
+  
+  If you ever set or change modules or backend configuration for Terraform,
+  rerun this command to reinitialize your working directory. If you forget, other
+  commands will detect it and remind you to do so if necessary.
+  ```
+
+2. You can view the files that were created as a result of ` terraform init ` with Tree:
+
+  ```
+  tree -a
+  ```
+  ```
+  |-- main.tf
+  `-- .terraform
+      `-- plugins
+          |-- registry.terraform.io
+          |   `-- hashicorp
+          |       `-- local
+          |           `-- 1.4.0
+          |               `-- linux_amd64
+          |                   `-- terraform-provider-local_v1.4.0_x4
+          `-- selections.json
+  
+  7 directories, 3 files
+  ```
+
+<h4> Generating an Execution Plan</h4>
+
+1. Terraform planning
+
+  Before we create the resource with a terraform apply, we can preview what Terraform intends to do by having it output the result of an execution plan. 
+  
+  Do this by running the command ` terraform plan `  in the terminal. The command and output are shown below.
+  ```
+  terraform plan
+  ```
+  ```
+  Refreshing Terraform state in-memory prior to plan...
+  The refreshed state will be used to calculate this plan, but will not be
+  persisted to local or remote state storage.
+  
+  ------------------------------------------------------------------------
+  
+  An execution plan has been generated and is shown below.
+  Resource actions are indicated with the following symbols:
+    + create
+  
+  Terraform will perform the following actions:
+  
+    # local_file.literature will be created
+    + resource "local_file" "literature" {
+        + content              = <<~EOT
+              Sun Tzu said: The art of war is of vital importance to the State.
+              It is a matter of life and death, a road either to safety or to
+              ruin. Hence it is a subject of inquiry which can on no account be
+              neglected.
+          EOT
+        + directory_permission = "0777"
+        + file_permission      = "0777"
+        + filename             = "art_of_war.txt"
+        + id                   = (known after apply)
+      }
+  
+  Plan: 1 to add, 0 to change, 0 to destroy.
+  
+  ------------------------------------------------------------------------
+  
+  Note: You didn't specify an "-out" parameter to save this plan, so Terraform
+  can't guarantee that exactly these actions will be performed if
+  "terraform apply" is subsequently run.  
+  ```
+ 
+<h4> Creating the Local File Resource</h4>
+
+1. Applying changes
+
+  Next let’s run a ` terraform apply ` and see how the output compares to the execution plan we created from terraform plan. 
+  
+  The command and output are shown below.
+  ```
+  terraform apply
+  ```
+  ```
+  An execution plan has been generated and is shown below.
+  Resource actions are indicated with the following symbols:
+    + create
+  
+  Terraform will perform the following actions:
+  
+    # local_file.literature will be created
+    + resource "local_file" "literature" {
+        + content              = <<~EOT
+              Sun Tzu said: The art of war is of vital importance to the State.
+              It is a matter of life and death, a road either to safety or to
+              ruin. Hence it is a subject of inquiry which can on no account be
+              neglected.
+          EOT
+        + directory_permission = "0777"
+        + file_permission      = "0777"
+        + filename             = "art_of_war.txt"
+        + id                   = (known after apply)
+      }
+  
+  Plan: 1 to add, 0 to change, 0 to destroy.
+  
+  Do you want to perform these actions?
+    Terraform will perform the actions described above.
+    Only 'yes' will be accepted to approve.
+  
+    Enter a value: yes
+  
+  local_file.literature: Creating...
+  local_file.literature: Creation complete after 0s [id=262612c6b5e2169d098751e409cfbd26d6715ba2]
+  
+  Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
+  ```
+
+2. Check changes
+
+  Two files were created as a result of this command, art_of_war.txt, and terraform.tfstate file. 
+  
+  You can view these files in the working directory by using the following command.
+  ```
+  tree -a
+  ```
+  ```
+  |-- art_of_war.txt
+  |-- main.tf
+  |-- .terraform
+  |   `-- plugins
+  |       |-- registry.terraform.io
+  |       |   `-- hashicorp
+  |       |       `-- local
+  |       |           `-- 1.4.0
+  |       |               `-- linux_amd64
+  |       |                   `-- terraform-provider-local_v1.4.0_x4
+  |       `-- selections.json
+  `-- terraform.tfstate
+  
+  7 directories, 5 files
+  ```
+
+3. Check art_of_war file 
+
+  We can verify that the art_of_war.txt matches what we expect. This can easily be done by cat-ing the file in the cli. 
+
+  The command and output are shown below. 
+  ```
+  cat art_of_war.txt
+  ```
+  ```
+  Sun Tzu said: The art of war is of vital importance to the State.
+  It is a matter of life and death, a road either to safety or to
+  ruin. Hence it is a subject of inquiry which can on no account be
+  neglected.
+  ```
+ 
+<h4> Updating the Local File Resource</h4>
+ 
+1. Now we are going to update our file content by adding some lines to it:
+  
+  ```
+  vi main.tf
+  ```
+  ```
+  terraform {
+          required_version = "~> 1.0.0"
+          required_providers {
+            local = "~> 1.2"
+          }
+  }
+  resource "local_file" "literature" {
+          content  = <<-EOT
+            Sun Tzu said: The art of war is of vital importance to the State.
+            It is a matter of life and death, a road either to safety or to
+            ruin. Hence it is a subject of inquiry which can on no account be
+            neglected.
+
+            The art of war, then, is governed by five constant factors, to be 
+            taken into account in one's deliberations, when seeking to 
+            determine the conditions obtaining in the field. 
+            These are: (1) The Moral Law; (2) Heaven; (3) Earth; (4) The 
+            Commander; (5) Method and discipline. 
+            EOT
+          filename = "art_of_war.txt"
+  }
+  ```
+
+2. Update Changes
+
+  There isn’t a special command for running a Terraform update. All we need to do is run a ` terraform apply `  to execute the changes. 
+  
+  Before we do that, let’s first perform a ` terraform plan ` to see what the generated execution plan looks like. 
+  
+  The command and output are shown below.
+  ```
+  terraform plan
+  ```
+  ```
+  Refreshing Terraform state in-memory prior to plan...
+  The refreshed state will be used to calculate this plan, but will not be
+  persisted to local or remote state storage.
+  
+  local_file.literature: Refreshing state... [id=262612c6b5e2169d098751e409cfbd26d6715ba2]
+  
+  ------------------------------------------------------------------------
+  
+  An execution plan has been generated and is shown below.
+  Resource actions are indicated with the following symbols:
+  -/+ destroy and then create replacement
+  
+  Terraform will perform the following actions:
+  
+    # local_file.literature must be replaced
+  -/+ resource "local_file" "literature" {
+        ~ content              = <<~EOT # forces replacement
+              Sun Tzu said: The art of war is of vital importance to the State.
+              It is a matter of life and death, a road either to safety or to
+              ruin. Hence it is a subject of inquiry which can on no account be
+              neglected.
+            + 
+            + The art of war, then, is governed by five constant factors, to be 
+            + taken into account in one's deliberations, when seeking to 
+            + determine the conditions obtaining in the field. 
+            + These are: (1) The Moral Law; (2) Heaven; (3) Earth; (4) The 
+            + Commander; (5) Method and discipline. 
+          EOT
+          directory_permission = "0777"
+          file_permission      = "0777"
+          filename             = "art_of_war.txt"
+        ~ id                   = "262612c6b5e2169d098751e409cfbd26d6715ba2" -> (known after apply)
+      }
+  
+  Plan: 1 to add, 0 to change, 1 to destroy.
+  
+  ------------------------------------------------------------------------
+  
+  Note: You didn't specify an "-out" parameter to save this plan, so Terraform
+  can't guarantee that exactly these actions will be performed if
+  "terraform apply" is subsequently run.
+  ```
+
+4. Apply changes 
+  
+  Go ahead and apply the proposed changes from the execution plan by running the command ` terraform apply -auto-approve ` . The command and output are shown below.
+  ```
+  terraform apply -auto-approve
+  ```
+  ```
+  local_file.literature: Refreshing state... [id=262612c6b5e2169d098751e409cfbd26d6715ba2]
+  local_file.literature: Destroying... [id=262612c6b5e2169d098751e409cfbd26d6715ba2]
+  local_file.literature: Destruction complete after 0s
+  local_file.literature: Creating...
+  local_file.literature: Creation complete after 0s [id=9ae8fecfcb936dce0e646bcf75cc9d8adecff05d]
+  
+  Apply complete! Resources: 1 added, 0 changed, 1 destroyed.
+  ```
+ 
+3. Check our art_of_war file
+
+  We can verify that the art_of_war.txt matches what we expect. This can easily be done by cat-ing the file in the cli. 
+  
+  The command and output are shown below. 
+  ```
+  cat art_of_war.txt
+  ```
+  ```
+  Sun Tzu said: The art of war is of vital importance to the State.
+  It is a matter of life and death, a road either to safety or to
+  ruin. Hence it is a subject of inquiry which can on no account be
+  neglected.
+  
+  The art of war, then, is governed by five constant factors, to be 
+  taken into account in one's deliberations, when seeking to 
+  determine the conditions obtaining in the field. 
+  These are: (1) The Moral Law; (2) Heaven; (3) Earth; (4) The 
+  Commander; (5) Method and discipline. 
+  ```
+
+<h4> Deleting the Local File Resource</h4>
+ 
+1. Destroying our resources
+
+  Our “Art of War” file had a good run. Let’s go ahead and clean it up using the terraform destroy command. 
+  
+  Type the following command into the cli (output is shown below):
+  ```
+  terraform destroy -auto-approve
+  ```
+  ```
+  local_file.literature: Refreshing state... [id=9ae8fecfcb936dce0e646bcf75cc9d8adecff05d]
+  local_file.literature: Destroying... [id=9ae8fecfcb936dce0e646bcf75cc9d8adecff05d]
+  local_file.literature: Destruction complete after 0s
+  
+  Destroy complete! Resources: 1 destroyed.
+  ```
+
+2. You can verify the art_of_war.txt file was deleted by listing the files in the directory:
+
+  ```
+  tree -a
+  ```
+  ```
+  |-- art.tf
+  |-- .terraform
+  |   `-- plugins
+  |       |-- registry.terraform.io
+  |       |   `-- hashicorp
+  |       |       `-- local
+  |       |           `-- 1.4.0
+  |       |               `-- linux_amd64
+  |       |                   `-- terraform-provider-local_v1.4.0_x4
+  |       `-- selections.json
+  |-- terraform.tfstate
+  `-- terraform.tfstate.backup
+  
+  7 directories, 5 files
+  ```
+ 
+  </xmp>
+  <script src="strapdown/strapdown.min.js"></script>
+</html>
+<!--
+Local Variables:
+mode: markdown
+End:
+->

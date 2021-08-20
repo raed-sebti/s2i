@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html>
+  <title>Guided Exercise: Count</title>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="strapdown/themes/Dark Mode.min.css">
+  <link rel="stylesheet" href="strapdown/themes/Light Mode.min.css">  
+  <xmp theme="superhero" style="display:none;" toc="true">
+      
+
+
+In this exercise, you will learn how to use count and foreach in terraform config files.
+
+By default, a resource block configures one real infrastructure object. However, sometimes you want to manage several similar objects (like a fixed pool of compute instances) 
+
+without writing a separate block for each one. Terraform has two ways to do this: count and for_each.
+
+
+
+#Outcomes
+
+You should be able to:
+- Use count meta-argument
+- Use foreach meta-argument
+
+#Steps
+
+1. Hard coded value 
+
+  ```
+  vi main.tf
+  ```
+  ```
+  resource "local_file" "pet" {
+    filename = var.filename[count.index]
+    count= 3
+  }
+  ```
+  ```
+  vi variables.tf
+  ```
+  ```
+  variable "filename" {
+    default =[
+    "/tmp/pet1.txt",
+    "/tmp/pet2.txt",
+    "/tmp/pet3.txt"
+    ]
+  }
+  ```
+  ```
+  terraform init
+  ```
+  ```
+  Initializing the backend...
+
+  Initializing provider plugins...
+  - Finding latest version of hashicorp/local...
+  - Installing hashicorp/local v2.1.0...
+  - Installed hashicorp/local v2.1.0 (signed by HashiCorp)
+  
+  Terraform has created a lock file .terraform.lock.hcl to record the provider
+  selections it made above. Include this file in your version control repository
+  so that Terraform can guarantee to make the same selections by default when
+  you run "terraform init" in the future.
+  
+  Terraform has been successfully initialized!
+  
+  You may now begin working with Terraform. Try running "terraform plan" to see
+  any changes that are required for your infrastructure. All Terraform commands
+  should now work.
+  
+  If you ever set or change modules or backend configuration for Terraform,
+  rerun this command to reinitialize your working directory. If you forget, other
+  commands will detect it and remind you to do so if necessary.  
+  ```
+  ```
+  terraform plan
+  ```
+  As we can see in the output, terraform will create 3 files for us using the list provided in the variables section.
+  ```
+    Terraform will perform the following actions:
+
+  # local_file.pet[0] will be created
+  + resource "local_file" "pet" {
+      + directory_permission = "0777"
+      + file_permission      = "0777"
+      + filename             = "/tmp/pet1.txt"
+      + id                   = (known after apply)
+    }
+
+  # local_file.pet[1] will be created
+  + resource "local_file" "pet" {
+      + directory_permission = "0777"
+      + file_permission      = "0777"
+      + filename             = "/tmp/pet2.txt"
+      + id                   = (known after apply)
+    }
+
+  # local_file.pet[2] will be created
+  + resource "local_file" "pet" {
+      + directory_permission = "0777"
+      + file_permission      = "0777"
+      + filename             = "/tmp/pet3.txt"
+      + id                   = (known after apply)
+    }
+
+  Plan: 3 to add, 0 to change, 0 to destroy.
+  ```
+  ```
+  terraform apply 
+  ```
+  ```
+    Terraform will perform the following actions:
+
+  # local_file.pet[0] will be created
+  + resource "local_file" "pet" {
+      + directory_permission = "0777"
+      + file_permission      = "0777"
+      + filename             = "/tmp/pet1.txt"
+      + id                   = (known after apply)
+    }
+
+  # local_file.pet[1] will be created
+  + resource "local_file" "pet" {
+      + directory_permission = "0777"
+      + file_permission      = "0777"
+      + filename             = "/tmp/pet2.txt"
+      + id                   = (known after apply)
+    }
+
+  # local_file.pet[2] will be created
+  + resource "local_file" "pet" {
+      + directory_permission = "0777"
+      + file_permission      = "0777"
+      + filename             = "/tmp/pet3.txt"
+      + id                   = (known after apply)
+    }
+
+  Plan: 3 to add, 0 to change, 0 to destroy.
+
+  Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+  local_file.pet[1]: Creating...
+  local_file.pet[0]: Creating...
+  local_file.pet[2]: Creating...
+  local_file.pet[0]: Creation complete after 0s [id=da39a3ee5e6b4b0d3255bfef95601890afd80709]
+  local_file.pet[1]: Creation complete after 0s [id=da39a3ee5e6b4b0d3255bfef95601890afd80709]
+  local_file.pet[2]: Creation complete after 0s [id=da39a3ee5e6b4b0d3255bfef95601890afd80709]
+
+  Apply complete! Resources: 3 added, 0 changed, 0 destroyed.
+  ```
+2. Generic values
+    
+  One drawback of the previous method is that if we add more values in the variables, they will not be created as we fixed the count to 3.
+
+  A better way of doing this is using the length method:
+  ```
+  vi main.tf
+  ```
+  ```
+  resource "local_file" "pet" {
+    filename = var.filename[count.index]
+    count= length(var.filename)
+  }
+  ```
+  ```
+  vi variables.tf
+  ```
+  ```
+  variable "filename" {
+    default =[
+    "/tmp/pet1.txt",
+    "/tmp/pet2.txt",
+    "/tmp/pet3.txt",
+    "/tmp/pet4.txt"
+    ]
+  }
+  ```
+  ```
+  terraform apply
+  ```
+  ```
+  Terraform will perform the following actions:
+
+  # local_file.pet[0] will be created
+  + resource "local_file" "pet" {
+      + directory_permission = "0777"
+      + file_permission      = "0777"
+      + filename             = "/tmp/pet1.txt"
+      + id                   = (known after apply)
+    }
+
+  # local_file.pet[1] will be created
+  + resource "local_file" "pet" {
+      + directory_permission = "0777"
+      + file_permission      = "0777"
+      + filename             = "/tmp/pet2.txt"
+      + id                   = (known after apply)
+    }
+
+  # local_file.pet[2] will be created
+  + resource "local_file" "pet" {
+      + directory_permission = "0777"
+      + file_permission      = "0777"
+      + filename             = "/tmp/pet3.txt"
+      + id                   = (known after apply)
+    }
+
+  # local_file.pet[3] will be created
+  + resource "local_file" "pet" {
+      + directory_permission = "0777"
+      + file_permission      = "0777"
+      + filename             = "/tmp/pet4.txt"
+      + id                   = (known after apply)
+    }
+
+  Plan: 3 to add, 0 to change, 0 to destroy.
+
+  Do you want to perform these actions?
+  Terraform will perform the actions described above.
+  Only 'yes' will be accepted to approve.
+
+  Enter a value: yes
+
+  local_file.pet[1]: Creating...
+  local_file.pet[0]: Creating...
+  local_file.pet[2]: Creating...
+  local_file.pet[3]: Creating...
+  local_file.pet[0]: Creation complete after 0s [id=da39a3ee5e6b4b0d3255bfef95601890afd80709]
+  local_file.pet[1]: Creation complete after 0s [id=da39a3ee5e6b4b0d3255bfef95601890afd80709]
+  local_file.pet[2]: Creation complete after 0s [id=da39a3ee5e6b4b0d3255bfef95601890afd80709]
+  local_file.pet[3]: Creation complete after 0s [id=da39a3ee5e6b4b0d3255bfef95601890afd80709]
+
+  Apply complete! Resources: 3 added, 0 changed, 0 destroyed.
+  ```
+  As we can see, we can create as many files as we want now, just by adding the filenames to the variables file!
+
+# Terraform on Azure
+
+1. Simple Example 
+  ```
+  mkdir ~/count-project && cd ~/count-project
+  ```
+  ```
+  vim c1-versions.tf
+  ```
+  ```
+  # Terraform Block
+  terraform {
+    required_version = ">= 1.0.0"
+    required_providers {
+      azurerm = {
+        source = "hashicorp/azurerm"
+        version = ">= 2.0" 
+      }
+    }
+  }
+
+  # Provider Block
+  provider "azurerm" {
+  features {}          
+  }
+  ```
+  ```
+  vim   c2-resource-group.tf
+  ```
+  ```
+  # Resource-1: Azure Resource Group
+  resource "azurerm_resource_group" "myrg" {
+    name = "myrg-${count.index}"
+    location = "East US"
+    count = 3
+  }
+  ```  
+1.Execute Terraform Commands
+
+  ```
+  # Terraform Initialize
+  terraform init
+
+  # Terraform Validate
+  terraform validate
+
+  # Terraform Plan 
+  terraform plan
+
+  # Terraform Apply 
+  terraform apply 
+
+  # Terraform Destroy
+  terraform destroy -auto-approve
+
+  # Verify
+  1. We should see 3 Resource groups created.
+  2. Verify the count.index number for each resource group
+  ``` 
+
+
+</xmp>
+   <script src="strapdown/strapdown.min.js"></script>
+</html>
+<!--
+Local Variables:
+mode: markdown
+End:
+->

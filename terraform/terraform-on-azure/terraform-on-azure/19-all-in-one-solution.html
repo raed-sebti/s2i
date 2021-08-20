@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html>
+  <title>Unguided Exercise Solution: All in One</title>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="strapdown/themes/Dark Mode.min.css">
+  <link rel="stylesheet" href="strapdown/themes/Light Mode.min.css">  
+  <xmp theme="superhero" style="display:none;" toc="true">
+
+
+
+#Section 1
+
+1. Configure your provider as `us-east-1`
+  ```
+  provider "aws" {
+    version    = "2.12.0"
+    region     = "us-east-1"
+  }
+  ```
+2. Create a new VPC using the 10.0.0.0/16 CIDR block
+
+  ```
+  vi networking.tf
+  ```
+  ```
+  resource "aws_vpc" "main" {
+    cidr_block           = "10.0.0.0/16"
+    enable_dns_hostnames = true
+  
+    tags = {
+      Name = "main"
+    }
+  }
+  ```
+
+3. Create a new subnet for the created VPC
+
+  ```
+  resource "aws_subnet" "main" {
+    vpc_id                  = aws_vpc.main.id
+    cidr_block              = "10.0.1.0/24"
+    map_public_ip_on_launch = true
+  
+    tags = {
+      Name = "main"
+    }
+  }
+  ```
+
+4. Create a new internet gateway for the VPC
+
+  ```
+  resource "aws_internet_gateway" "main" {
+    vpc_id = aws_vpc.main.id
+    tags = {
+      Name = "main"
+    }
+  }
+  ```
+
+5.  Manage the default route table of the VPC and add a route for 0.0.0.0/0 that sends traffic to the managed internet gateway.
+
+  ```
+  resource "aws_default_route_table" "main" {
+    default_route_table_id = aws_vpc.main.default_route_table_id
+    tags = {
+      "Name" = "main"
+    }
+    route {
+      cidr_block = "0.0.0.0/0"
+      gateway_id = aws_internet_gateway.main.id
+    }
+  }
+  ```
+6. Create a new security group that allows inbound traffic
+
+  ```
+  resource "aws_security_group" "allow_inbound_http" {
+    name        = "allow-inbound-http"
+    description = "Allow inbound HTTP traffic"
+    vpc_id      = aws_vpc.main.id
+  
+    ingress {
+      from_port   = var.server_port
+      to_port     = 80
+      protocol    = "tcp"
+      cidr_blocks = ["0.0.0.0/0"]
+    }
+  }
+  ```
+  Then, declare our variable
+  ```
+  vi variables.tf
+  ```
+  ```
+  variable "server_port" {
+    description = "The port the server will use for HTTP requests"
+    type = number
+    default = 80
+   }
+  ```
+6. Create a new security group that allows outbound traffic
+
+  ```
+  resource "aws_security_group" "allow_outbound_traffic" {
+    name        = "allow-outbound-traffic"
+    description = "Allow all outbound traffic"
+    vpc_id      = aws_vpc.main.id
+  
+    egress {
+      from_port   = 0
+      to_port     = 0
+      protocol    = "-1"
+      cidr_blocks = ["0.0.0.0/0"]
+    }
+  }
+  ```
+
+7. Define an output value of the IP of the EC2 instance
+  ```
+  output "aws-nginx-ip" {
+    value = aws_instance.web_server_01.public_ip
+  }
+  ```
+
+8. Create a file for selecting the ami image 
+  ```
+  vi ami.tf
+  ```
+  ```
+  data "aws_ami" "ubuntu" {
+    most_recent = true
+  
+    filter {
+      name   = "name"
+      values = ["ubuntu/images/hvm-ssd/ubuntu-trusty-14.04-amd64-server-*"]
+    }
+  
+    filter {
+      name   = "virtualization-type"
+      values = ["hvm"]
+    }
+  
+    owners = ["099720109477"]
+  }
+  ```
+
+9. Create a new instance of the latest Ubuntu 14.04 on an t2.micro node with an AWS Tag naming it "web-server-01". 
+  ```
+  vi main.tf
+  ```
+  ```
+  resource "aws_instance" "web_server_01" {
+    ami           = data.aws_ami.ubuntu.id
+    instance_type = "t2.micro"
+    subnet_id     = aws_subnet.main.id
+    user_data     = <<EOT
+  #cloud-config
+  # update apt on boot
+  package_update: true
+  # install nginx
+  packages:
+  - nginx
+  write_files:
+  - content: |
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title> exercise 3</title>
+        <meta http-equiv="Content-Type" content="text/html;charset=UTF-8">
+        <style>
+          html, body {
+            background: #000;
+            height: 100%;
+            width: 100%;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex-flow: column;
+          }
+          img { width: 250px; }
+          svg { padding: 0 40px; }
+          p {
+            color: #fff;
+            font-family: 'Courier New', Courier, monospace;
+            text-align: center;
+            padding: 10px 30px;
+          }
+        </style>
+      </head>
+      <body>
+        <p> Congrats on finishing section 1 </p>
+      </body>
+      </html>
+    path: /usr/share/app/index.html
+    permissions: '0644'
+  runcmd:
+  - cp /usr/share/app/index.html /usr/share/nginx/html/index.html
+  EOT
+  
+    tags = {
+      Name = "web-server-01"
+    }
+  
+    vpc_security_group_ids = [
+      aws_security_group.allow_inbound_http.id,
+      aws_security_group.allow_outbound_traffic.id,
+    ]
+  }
+  ```
+
+10. Now, deploy the infrastructure
+  ```
+  terraform init
+  ```
+  ```
+  terraform apply
+  ```
+  
+11. Destroy the web server
+  ```
+  terraform destroy
+  ```
+
+#Section 2
+
+#Questions
+1. Choose AWS as provider and `us-east-1` as region.
+  ```
+  provider "aws" {
+      version    = "2.12.0"
+      region     = "us-east-1"
+  }
+  ```
+2. Fetch the latest ubuntu-bionic-18.04-amd64-server ami and output on the console
+
+  ```
+  data "aws_ami" "ubuntu" {
+      most_recent = true
+      filter {
+        name   = "name"
+        values = ["ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-amd64-server-*"]
+      }
+      owners = ["099720109477"]
+  }
+  output "aws-ubuntu-ami" {
+    value = data.aws_ami.ubuntu.id
+  }
+  ```
+  ```
+  terraform init
+  ```
+  ```
+  terraform apply
+  ```
+
+3. Create an AWS instance named `helloworld` using the image previously fetched and `t2.micro` as instance type.
+  ```
+  resource "aws_instance" "helloworld" {
+      ami           = data.aws_ami.ubuntu.id
+      instance_type = "t2.micro"
+      subnet_id     = "${aws_subnet.us-east-1a-public.id}"
+  }
+  ```
+4. Create a VPC and a Subnet with the aws instance.
+  ```
+  resource "aws_vpc" "example" {
+      cidr_block           = "10.0.0.0/16"
+      enable_dns_hostnames = true
+      enable_dns_support   = true
+  }
+
+  resource "aws_subnet" "us-east-1a-public" {
+      vpc_id            = "${aws_vpc.example.id}"
+      cidr_block        = "10.0.1.0/25"
+      availability_zone = "us-east-1a"
+  }
+  ```
+5. Create a local file
+  ```
+  vi local.tf
+  ```
+  ```
+  terraform {
+        required_version = "~> 0.12"
+        required_providers {
+            local = "~> 1.2"
+          }
+  }
+  resource "local_file" "literature" {
+        content  = <<-EOT
+        You're almost there! Keep up the great work!
+        EOT
+        filename = "last_exercise.txt"
+  }
+  ```
+6. Deploy the configuration 
+  ```
+  terraform init
+  ```
+  ```
+  terraform apply
+  ```
+7. Destroy the app
+  ```
+  terraform destroy
+  ```
+8. Change the entire configuration into two modules
+  
+  ```
+  mkdir -p modules/networking && cd modules/networking
+  ```
+  ```
+  vi main.tf
+  ```
+  ```
+  resource "aws_vpc" "example" {
+      cidr_block           = "10.0.0.0/16"
+      enable_dns_hostnames = true
+      enable_dns_support   = true
+  }
+  resource "aws_subnet" "us-east-1a-public" {
+      vpc_id            = "${aws_vpc.example.id}"
+      cidr_block        = "10.0.1.0/25"
+      availability_zone = "us-east-1a"
+  }
+  output "aws_subnet" {
+      value = aws_subnet.us-east-1a-public.id
+  } 
+  ```
+  ```
+  vi README.md
+  ```
+  ```
+  # exercise 4
+  This is a description for a module
+  ```
+  ```
+  cd ../..
+  ```
+  ```
+  mkdir -p modules/fetching && cd modules/fetching
+  ```
+  ```
+  data "aws_ami" "ubuntu" {
+      most_recent = true
+      filter {
+        name   = "name"
+        values = ["ubuntu/images/hvm-ssd/ubuntu-bionic-18.04-amd64-server-*"]
+      }
+      owners = ["099720109477"]
+  }
+  output "aws_ami" {
+    value = data.aws_ami.ubuntu.id
+  }
+  ```
+  ```
+  vi README.md
+  ```
+  ```
+  # exercise 4
+  This is a description for a module
+  ```
+
+  ```
+  cd ../..
+  ```
+  ```
+  vi main.tf
+  ```
+  ```
+  module "fetching" {
+    source    = "./modules/fetching"
+  }
+  module "networking" {
+    source    = "./modules/networking"
+  }
+  provider "aws" {
+      region     = "us-east-1"
+  }
+  resource "aws_instance" "helloworld" {
+      ami           = module.fetching.aws_ami
+      instance_type = "t2.micro"
+      subnet_id     = module.networking.aws_subnet
+  }
+  ```
+9. Deploy the app
+  ```
+  terraform init
+  ```
+  ```
+  terraform apply
+  ```
+10. Destroy the app
+
+  ```
+  terraform destroy
+  ``` 
+11. Publish the modules on Terraform Registry
+  
+  First, create a repository on github named "terraform-aws-fetching" then
+  ```
+  cd modules/fetching
+  ```
+  ```
+  git init
+  ```
+  ```
+  git add .
+  ```
+  ```
+  git commit -m "first commit"
+  ```
+  ```
+  git branch -M main
+  ```
+  ```
+  git remote add origin https://github.com/<studentID>/terraform-aws-fetching.git
+  ```
+  ```
+  git push -u origin main
+  ```
+  Create a Tag for this repo.
+
+  Then, create a second repository on github named "terraform-aws-networking" then
+  ```
+  cd ../networking
+  ```
+  ```
+  git init
+  ```
+  ```
+  git add .
+  ```
+  ```
+  git commit -m "first commit"
+  ```
+  ```
+  git branch -M main
+  ```
+  ```
+  git remote add origin https://github.com/<studentID>/terraform-aws-networking.git
+  ```
+  ```
+  git push -u origin main
+  ```
+  Create a Tag for this repo.
+
+  Now, you should be able to find these modules on terraform so you can deploy them. 
+
+12. Change the config 
+  ```
+  vi main.tf
+  ```
+  ```
+  module "fetching" {
+    source  = "<studentID>/fetching/aws"
+  }
+  module "networking" {
+    source    = "<studentID>/networking/aws"
+  }
+  provider "aws" {
+      region     = "us-east-1"
+  }
+  resource "aws_instance" "helloworld" {
+      ami           = module.fetching.aws_ami
+      instance_type = "t2.micro"
+      subnet_id     = module.networking.aws_subnet
+  }
+  ```
+13. Deploy the app
+  ```
+  terraform init
+  ```
+  ```
+  terraform apply
+  ```
+14. Destroy the app
+  ```
+  terraform destroy
+  ```
+  
+
+  </xmp>
+  <script src="strapdown/strapdown.min.js"></script>
+</html>
+<!--f
+Local Variables:
+mode: markdown
+End:
+->

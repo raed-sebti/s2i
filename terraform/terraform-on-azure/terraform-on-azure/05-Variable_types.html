@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html>
+  <title>Guided Exercise: Variable Types</title>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="strapdown/themes/Dark Mode.min.css">
+  <link rel="stylesheet" href="strapdown/themes/Light Mode.min.css">  
+  <xmp theme="superhero" style="display:none;" toc="true">
+      
+
+
+In this exercise, you will learn the different types of terraform variables.
+
+Variables are used in terraform in order to avoid hard coding values into our configuration. There are multiple types of these variables, so we will explore them all in this lab.
+
+#Outcomes
+
+You should be able to:
+- Explore terraform variables
+- Use some of them
+
+#Steps
+
+1. Instead of using hard coded values into our configuration files, terraform provides us with a declarative method for declaring our Variables.
+  
+  Without variables, we would have files like this
+  ```
+  vi main.tf
+  ```
+  ```
+  resource "local_file" "jedi" {
+    filename = "/tmp/first-jedi"
+    content = "phanius"
+  }
+  ```
+  Instead, we can use a main.tf that look more like This
+  ```
+  resource "local_file" "jedi" {
+    filename = var.jedi["filename"]
+    content = var.jedi["content"]
+  }
+  ```
+  and then declare our variables in a seperate file called `variables.tf`. This file is used generally for declaring variables only, but we can fill the values in there too:
+  ```
+  vi variables.tf
+  ```
+  ```
+  variable "jedi" {
+    type = map
+    default = {
+    filename = "/tmp/first-jedi"
+    content = "phanius"
+    }
+ 
+  }
+  ```
+  Now, let's run `init` to install the local provider.
+  ```
+  terraform init
+  ```
+  ```
+  Initializing the backend...
+
+  Initializing provider plugins...
+  - Finding latest version of hashicorp/local...
+  - Installing hashicorp/local v2.1.0...
+  - Installed hashicorp/local v2.1.0 (self-signed, key ID 34365D9472D7468F)
+  
+  Partner and community providers are signed by their developers.
+  If you'd like to know more about provider signing, you can read about it here:
+  https://www.terraform.io/docs/plugins/signing.html
+  
+  The following providers do not have any version constraints in configuration,
+  so the latest version was installed.
+  
+  To prevent automatic upgrades to new major versions that may contain breaking
+  changes, we recommend adding version constraints in a required_providers block
+  in your configuration, with the constraint strings suggested below.
+  
+  * hashicorp/local: version = "~> 2.1.0"
+  
+  Terraform has been successfully initialized!
+  
+  You may now begin working with Terraform. Try running "terraform plan" to see
+  any changes that are required for your infrastructure. All Terraform commands
+  should now work.
+  
+  If you ever set or change modules or backend configuration for Terraform,
+  rerun this command to reinitialize your working directory. If you forget, other
+  commands will detect it and remind you to do so if necessary.
+  ```
+  ```
+  terraform plan
+  ```
+  ```
+  Refreshing Terraform state in-memory prior to plan...
+  The refreshed state will be used to calculate this plan, but will not be
+  persisted to local or remote state storage.
+  
+  ------------------------------------------------------------------------
+  
+  An execution plan has been generated and is shown below.
+  Resource actions are indicated with the following symbols:
+    + create
+  
+  Terraform will perform the following actions:
+  
+    # local_file.jedi will be created
+    + resource "local_file" "jedi" {
+        + content              = "phanius"
+        + directory_permission = "0777"
+        + file_permission      = "0777"
+        + filename             = "/tmp/first-jedi"
+        + id                   = (known after apply)
+      }
+  
+  Plan: 1 to add, 0 to change, 0 to destroy.
+  
+  ------------------------------------------------------------------------
+  
+  Note: You didn't specify an "-out" parameter to save this plan, so Terraform
+  can't guarantee that exactly these actions will be performed if
+  "terraform apply" is subsequently run.
+  ```
+  ```
+  terraform apply
+  ```
+  ```
+  An execution plan has been generated and is shown below.
+  Resource actions are indicated with the following symbols:
+    + create
+  
+  Terraform will perform the following actions:
+  
+    # local_file.jedi will be created
+    + resource "local_file" "jedi" {
+        + content              = "phanius"
+        + directory_permission = "0777"
+        + file_permission      = "0777"
+        + filename             = "/tmp/first-jedi"
+        + id                   = (known after apply)
+      }
+  
+  Plan: 1 to add, 0 to change, 0 to destroy.
+  
+  Do you want to perform these actions?
+    Terraform will perform the actions described above.
+    Only 'yes' will be accepted to approve.
+  
+    Enter a value: yes
+  
+  local_file.jedi: Creating...
+  local_file.jedi: Creation complete after 0s [id=23760ef64e0124aa08fecf101c302d3b64220d1a]
+  
+  Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
+  ```
+
+2. Different Variables types
+
+  There are many variable types, we've already seen `map` which is a key/ value object. There are also `bool`, `string`, `number`, `lists`, `sets` and `objects`. 
+  
+  `String variable`:
+  ```
+  variable "name" {
+     type = string
+     default = "Mark"
+  
+  }
+  ```
+  In order to fetch the value of the name variable later on in the main.tf file, we can use this:
+  ```
+  var.name
+  ```
+  `Bool variable`:
+  ```
+  variable "vaccinated" {
+     type = bool
+     default = true 
+  }
+  ```
+  `Number variable`:
+  ```
+  variable "age" {
+     type = number
+     default = 35 
+  }
+  ```
+  `Map variable`:
+  ```
+  variable "hard_drive" {
+    type = map
+    default = {
+         slow = "HHD"
+         fast = "SSD"
+    }
+  }
+  ```
+  In order to fetch the value of the slow key in hard_drive variable later on in the main.tf file
+  ```
+  var.hard_drive["slow"]
+  ```
+  `List variable`:
+  ```
+  variable "gender" {
+    type = list(string)
+    default = ["Male", "Female","Non-binary"]
+  }
+  ```
+  In order to fetch the value of the second element in gender list of strings later on in the main.tf file
+  ```
+  var.gender[1]
+  ```
+  `Set variable`:
+  ```
+  variable "users" {
+    type = set(string)
+    default = ["tom", "jerry", "pluto", "daffy", "donald", "jerry", "chip", "dale"]
+  }
+  ```
+  The difference between set and list is that a set can't have duplicated elements.
+  
+  Let's correct the mistake in the previous set by deleting one occurance of "jerry"
+  ```
+  variable "users" {
+    type = set(string)
+    default = ["tom", "jerry", "pluto", "daffy", "donald", "chip", "dale"]
+  }
+  ```
+  We will explore the relationship between main.tf files, and the variable files in the next lab!
+ 
+# Terraform on Azure
+  - Input Variables Basics
+    - Create / Review the terraform manifests
+    - c1-versions.tf
+    - c2-variables.tf
+    - c3-resource-group.tf
+    - c4-virtual-network.tf  
+
+1. Creating Terraform configuration folder
+    - Terraform configuration file have `.tf` extension. 
+    - Terraform command needs to run in the directory of the config files. 
+    - It can’t take files from subdirectories.
+  
+     ```
+      mkdir ~/variable-types && cd ~/variable-types 
+     ```
+1. We are going to define the c1-versions.tf
+
+    ```
+    vim c1-versions.tf
+    ```     
+    ```
+      # Terraform Block
+      terraform {
+        required_version = ">= 1.0.0"
+        required_providers {
+          azurerm = {
+            source = "hashicorp/azurerm"
+            version = ">= 2.0" 
+          }
+          random = {
+            source = "hashicorp/random"
+            version = ">= 3.0"
+          }
+        }
+      }
+
+      # Provider Block
+      provider "azurerm" {
+      features {}          
+      }
+
+      # Random String Resource
+      resource "random_string" "myrandom" {
+        length = 6
+        upper = false 
+        special = false
+        number = false   
+      }
+     ```
+1. We are going to define c2-variables.tf and define the below listed variables     
+     ```
+     vim c2-variables.tf
+     ```     
+     ```
+    # Input Variables
+
+    # 1. Business Unit Name
+    variable "business_unit" {
+      description = "Business Unit Name"
+      type = string
+      default = "hr"
+    }
+    # 2. Environment Name
+    variable "environment" {
+      description = "Environment Name"
+      type = string
+      default = "dev"
+    }
+    # 3. Resource Group Name
+    variable "resoure_group_name" {
+      description = "Resource Group Name"
+      type = string
+      default = "myrg"
+    }
+    # 4. Resource Group Location
+    variable "resoure_group_location" {
+      description = "Resource Group Location"
+      type = string
+      default = "East US"
+    }
+    # 5. Virtual Network Name
+    variable "virtual_network_name" {
+      description = "Virtual Network Name"
+      type = string 
+      default = "myvnet"
+    }
+    ```
+1. Use the Variables in Resources - c3-resource-group.tf
+    ```
+    vim c3-resource-group.tf
+    ```   
+    ```
+    # Resource-1: Azure Resource Group
+    resource "azurerm_resource_group" "myrg" {
+      #name = var.resource_group_name
+      name = "${var.business_unit}-${var.environment}-${var.resoure_group_name}"
+      location = var.resoure_group_location
+    }
+    ```
+1. Use the Variables in Resources - c4-virtual-network.tf 
+    ```
+    vim c4-virtual-network.tf 
+    ```  
+    ```  
+    # Create Virtual Network
+    resource "azurerm_virtual_network" "myvnet" {
+      name                = "${var.business_unit}-${var.environment}-${var.virtual_network_name}"
+      address_space       = ["10.0.0.0/16"]
+      location            = azurerm_resource_group.myrg.location
+      resource_group_name = azurerm_resource_group.myrg.name
+    }
+    ```  
+1. Execute Terraform Commands
+    ```
+      # Initialize Terraform
+      terraform init
+
+      # Validate Terraform configuration files
+      terraform validate
+
+      # Format Terraform configuration files
+      terraform fmt
+
+      # Review the terraform plan
+      terraform plan
+
+      # Create Resources
+      terraform apply
+
+      # Verify the same on Azure Management Console
+      1. Resource Group Name
+      2. Virtual Network Name  
+    ```   
+1. Clean-Up
+    ```  
+    # Clean-Up
+    terraform destroy -auto-approve
+    rm -rf .terraform*
+    rm -rf terraform.tfstate*    
+    ```    
+
+</xmp>
+   <script src="strapdown/strapdown.min.js"></script>
+</html>
+<!--
+Local Variables:
+mode: markdown
+End:
+->

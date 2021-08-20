@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+  <title>Unguided exercise - Generating local files</title>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="strapdown/themes/Dark Mode.min.css">
+  <link rel="stylesheet" href="strapdown/themes/Light Mode.min.css">  
+  <xmp theme="superhero" style="display:none;" toc="true">
+      
+
+# Lab - Generating local files
+
+1. Create a new terraform workspace named `local_file` 
+2. Use a config file named main.tf
+2. Use the local provider
+3. Use the following content:
+```
+Terraform is a tool for building, changing and versioning infrastructure safely and efficiently
+```
+4. Use 'what_is_terraform' as file name:
+5. Initialize your workspace
+6. Check your execution plan and save it to a file named mytf-plan
+7. Apply the mytf-plan
+8. Check that all resources were created
+9. update the content of main.tf to look like:
+```
+Terraform is a tool for building, changing and versioning infrastructure safely and efficiently
+Terraform is an open-source infrastructure as code software tool created by HashiCorp. It enables users to define and provision a datacenter infrastructure using a high-level configuration language known as Hashicorp Configuration Language (HCL)
+```
+6. Check your execution plan and save it to a file named mytf-update-plan
+7. Apply the mytf-update-plan
+8. Check that all resources were Updated/Created
+9. Destroy all the resources
+10. Check that all resources were destroyed
+ 
+ 
+  </xmp>
+  <script src="strapdown/strapdown.min.js"></script>
+</html>
+<!--
+Local Variables:
+mode: markdown
+End:
+->

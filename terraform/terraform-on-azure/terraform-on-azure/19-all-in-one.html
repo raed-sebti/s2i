@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html>
+  <title>Unguided Exercise: All in One</title>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="strapdown/themes/Dark Mode.min.css?version=1">
+  <link rel="stylesheet" href="strapdown/themes/Light Mode.min.css?version=1">  
+  <xmp theme="superhero" style="display:none;" toc="true">
+
+
+#Section 1
+In this section, you will deploy an nginx web server.
+
+#Questions
+
+<h4>Configuring the Web Server</h4>
+
+1. Configure your provider as `us-east-1`
+
+  <b>Note:</b> All the components have attributes missing, add them yourself.
+
+2. Create a new VPC using the 10.0.0.0/16 CIDR block
+    ```
+    resource "aws_vpc" "main" {
+      cidr_block           = "10.0.0.0/16"
+      enable_dns_hostnames = <input-goes-here>
+    
+      tags = {
+        Name = "main"
+      }
+    }
+    ```
+3. Create a new subnet for the created VPC
+    ```
+    resource "aws_subnet" "main" {
+      vpc_id                  = <input-goes-here>
+      cidr_block              = "10.0.1.0/24"
+      map_public_ip_on_launch = <input-goes-here>
+    
+      tags = {
+        Name = "main"
+      }
+    }  
+    ```
+4. Create a new internet gateway for the VPC
+    ```
+    resource "aws_internet_gateway" "main" {
+      vpc_id = aws_vpc.main.id
+      tags = {
+        Name = "main"
+      }
+    }  
+    ```
+5.  Manage the default route table of the VPC and add a route for 0.0.0.0/0 that sends traffic to the managed internet gateway.
+    ```
+    resource "aws_default_route_table" "main" {
+      default_route_table_id = aws_vpc.main.default_route_table_id
+      tags = {
+        "Name" = "main"
+      }
+      route {
+        cidr_block = "<input-goes-here>"
+        gateway_id = aws_internet_gateway.main.id
+      }
+    }
+    ```
+6. Create a new security group that allows inbound traffic
+    ```
+    resource "aws_security_group" "allow_inbound_http" {
+      name        = "allow-inbound-http"
+      description = "Allow inbound HTTP traffic"
+      vpc_id      = <input-goes-here>
+    
+      ingress {
+        from_port   = <input-goes-here>
+        to_port     = <input-goes-here>
+        protocol    = "tcp"
+        cidr_blocks = ["<input-goes-here>"]
+      }
+    }
+    ```
+6. Create a new security group that allows outbound traffic
+    ```
+    resource "aws_security_group" "allow_outbound_traffic" {
+      name        = "allow-outbound-traffic"
+      description = "Allow all outbound traffic"
+      vpc_id      = <input-goes-here>
+    
+      egress {
+        from_port   = <input-goes-here>
+        to_port     = <input-goes-here>
+        protocol    = "-1"
+        cidr_blocks = ["<input-goes-here>"]
+      }
+    }
+    ```
+7. Define an output value of the IP of the EC2 instance
+8. Create a file for selecting the ami image 
+    ```
+    data "aws_ami" "ubuntu" {
+      most_recent = true
+    
+      filter {
+        name   = "name"
+        values = ["<input-goes-here>"]
+      }
+    
+      filter {
+        name   = "virtualization-type"
+        values = ["hvm"]
+      }
+    
+      owners = ["099720109477"]
+    }
+    ```
+
+9. Create a new instance of the latest Ubuntu 14.04 on an t2.micro node with an AWS Tag naming it "web-server-01". 
+
+    ```
+    resource "aws_instance" "web_server_01" {
+      ami           = <input-goes-here>
+      instance_type = "<input-goes-here>"
+      subnet_id     = <input-goes-here>
+      user_data     = <<EOT
+      package_update: true
+      packages:
+      - <input-goes-here>
+      write_files:
+      - content: |
+          <html>
+          <body>
+            <p> Customize your HTML here! </p>
+          </body>
+          </html>
+        path: /usr/share/app/index.html
+        permissions: '0644'
+    runcmd:
+    - cp /usr/share/app/index.html /usr/share/nginx/html/index.html
+    EOT
+  
+    tags = {
+      Name = "web-server-01"
+    }
+  
+    vpc_security_group_ids = [
+      aws_security_group.<input-goes-here>,
+      aws_security_group.<input-goes-here>,
+    ]
+    }
+    ```
+    
+10. Now, deploy the infrastructure
+  
+11. Destroy the web server
+
+
+#Section 2
+In this exercise, you will cover many of the things we've learnt in this course.
+
+  
+#Questions
+1. Choose AWS as provider and `us-east-1` as region.
+
+2. Fetch the latest ubuntu-bionic-18.04-amd64-server ami and output on the console
+3. Create an AWS instance named `helloworld` using the image previously fetched and `t2.micro` as instance type.
+4. Create a VPC and a Subnet with the aws instance.
+  Use this configuration for the VPC
+  ```
+  cidr_block : 10.0.0.0/16
+  enable both dns hostnames and dns support
+  ```
+  And this configuration for the subnet
+  ```
+  cirdr_block : 10.0.1.0/25
+  availability zone: us-east-1a
+  ```
+5. Use the local provider to generate a file named "last_exercise" having this content.
+  ```
+  You're almost there! Keep up the great work!
+  ```
+  <b>Note:</b> Make sure to use a different terraform file other than the `main.tf`.
+5. Deploy the configuration 
+6. Destroy the application, then delete the terraform file that you used in `step 5`.
+7. Refactor the code into modules
+  - Module1: `fetching` 
+    
+    This module will be responsible for fetching the latest ubuntu ami.
+  - Module2: `networking`
+    
+    This module handles vpc and subnets
+8. Deploy the application
+9. Destroy the application
+10. Now, publish the two modules on Terraform Registry
+    
+  <b>Hint:</b> You need to push the code to github first and make sure you name your repository in this way "terraform-aws-<module-name>"
+
+11. Change the previous configuration to use the module from Terraform Registry instead of using it locally.
+ 
+  <b>Hint:</b> If you don't find your repo in the list, make sure you tagged it.
+12. Deploy the application
+13. Destroy the application
+
+
+
+
+  </xmp>
+  <script src="strapdown/strapdown.min.js"></script>
+</html>
+<!--f
+Local Variables:
+mode: markdown
+End:
+->

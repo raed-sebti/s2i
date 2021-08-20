@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html>
+  <title>Guided Exercise: resource Attribute/Dependencies</title>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="strapdown/themes/Dark Mode.min.css">
+  <link rel="stylesheet" href="strapdown/themes/Light Mode.min.css">  
+  <xmp theme="superhero" style="display:none;" toc="true">
+      
+
+
+In this exercise, you will learn about resource attributes!
+
+Terraform makes several kinds of named values available. Each of these names is an expression that references the associated value; 
+
+You can use them as standalone expressions, or combine them with other expressions to compute new values.
+
+#Outcomes
+
+You should be able to:
+- Understand Implicit/Explicit dependency
+- Use dependencies
+
+#Steps
+
+1. Using implicit dependency 
+
+  ```
+  vi main.tf
+  ```
+  ```
+  resource "time_static" "time_update" {
+  }
+  ```
+  As you can see, the resource block is empty. This is because time_static does not need any arguments to be supplied to work.
+  When applied as it is, terraform creates a logical resource locally with the current time.
+  ```
+  terraform init
+  ```
+  ```
+  Initializing the backend...
+
+  Initializing provider plugins...
+  - Finding latest version of hashicorp/time...
+  - Installing hashicorp/time v0.7.2...
+  - Installed hashicorp/time v0.7.2 (signed by HashiCorp)
+  
+  Terraform has created a lock file .terraform.lock.hcl to record the provider
+  selections it made above. Include this file in your version control repository
+  so that Terraform can guarantee to make the same selections by default when
+  you run "terraform init" in the future.
+  
+  Terraform has been successfully initialized!
+  
+  You may now begin working with Terraform. Try running "terraform plan" to see
+  any changes that are required for your infrastructure. All Terraform commands
+  should now work.
+  
+  If you ever set or change modules or backend configuration for Terraform,
+  rerun this command to reinitialize your working directory. If you forget, other
+  commands will detect it and remind you to do so if necessary.  
+  ```
+  ```
+  terraform plan
+  ```
+  ```
+  Terraform used the selected providers to generate the following execution plan. Resource
+  actions are indicated with the following symbols:
+    + create
+  
+  Terraform will perform the following actions:
+  
+    # time_static.time_update will be created
+    + resource "time_static" "time_update" {
+        + day     = (known after apply)
+        + hour    = (known after apply)
+        + id      = (known after apply)
+        + minute  = (known after apply)
+        + month   = (known after apply)
+        + rfc3339 = (known after apply)
+        + second  = (known after apply)
+        + unix    = (known after apply)
+        + year    = (known after apply)
+      }
+  
+  Plan: 1 to add, 0 to change, 0 to destroy.
+  
+  ─────────────────────────────────────────────────────────────────────────────────────────────
+  
+  Note: You didn't use the -out option to save this plan, so Terraform can't guarantee to take
+  exactly these actions if you run "terraform apply" now.  
+  ```
+  ```
+  terraform apply 
+  ```
+  ``` 
+  Terraform used the selected providers to generate the following execution plan. Resource
+  actions are indicated with the following symbols:
+    + create
+  
+  Terraform will perform the following actions:
+  
+    # time_static.time_update will be created
+    + resource "time_static" "time_update" {
+        + day     = (known after apply)
+        + hour    = (known after apply)
+        + id      = (known after apply)
+        + minute  = (known after apply)
+        + month   = (known after apply)
+        + rfc3339 = (known after apply)
+        + second  = (known after apply)
+        + unix    = (known after apply)
+        + year    = (known after apply)
+      }
+  
+  Plan: 1 to add, 0 to change, 0 to destroy.
+  
+  Do you want to perform these actions?
+    Terraform will perform the actions described above.
+    Only 'yes' will be accepted to approve.
+  
+    Enter a value: yes
+  
+  time_static.time_update: Creating...
+  time_static.time_update: Creation complete after 0s [id=2021-07-18T19:13:10Z]  
+  ```
+  Check the attributes that are exported by the time_static resource
+  
+  Refer to the Argument Reference from the documentation: https://registry.terraform.io/providers/hashicorp/time/latest/docs/resources/static
+  
+  This is called implicit dependency. There is another way to declare a dependency between 2 resources:
+
+2. Explicit Dependency
+
+  In order to mention that a resource is depending on another, we can use the depends_on keyword.
+  ```
+  depends_on=[
+  random_pet.my-pet
+  ]
+  ```
+  Let's see a full scenario for this usecase!
+  ```
+  vi main.tf
+  ```
+  ```
+  resource "tls_private_key" "pvtkey" {
+    algorithm = "RSA"
+    rsa_bits  = 4096
+  }
+  ```
+  ```
+  terraform init
+  ```
+  ``` 
+  Initializing the backend...
+
+  Initializing provider plugins...
+  - Finding latest version of hashicorp/tls...
+  - Installing hashicorp/tls v3.1.0...
+  - Installed hashicorp/tls v3.1.0 (self-signed, key ID 34365D9472D7468F)
+  
+  Partner and community providers are signed by their developers.
+  If you'd like to know more about provider signing, you can read about it here:
+  https://www.terraform.io/docs/plugins/signing.html
+  
+  The following providers do not have any version constraints in configuration,
+  so the latest version was installed.
+  
+  To prevent automatic upgrades to new major versions that may contain breaking
+  changes, we recommend adding version constraints in a required_providers block
+  in your configuration, with the constraint strings suggested below.
+  
+  * hashicorp/tls: version = "~> 3.1.0"
+  
+  Terraform has been successfully initialized!
+  
+  You may now begin working with Terraform. Try running "terraform plan" to see
+  any changes that are required for your infrastructure. All Terraform commands
+  should now work.
+  
+  If you ever set or change modules or backend configuration for Terraform,
+  rerun this command to reinitialize your working directory. If you forget, other
+  commands will detect it and remind you to do so if necessary.
+  ```
+  ```
+  terraform apply
+  ```
+  ```
+  An execution plan has been generated and is shown below.
+  Resource actions are indicated with the following symbols:
+    + create
+  
+  Terraform will perform the following actions:
+  
+    # tls_private_key.pvtkey will be created
+    + resource "tls_private_key" "pvtkey" {
+        + algorithm                  = "RSA"
+        + ecdsa_curve                = "P224"
+        + id                         = (known after apply)
+        + private_key_pem            = (sensitive value)
+        + public_key_fingerprint_md5 = (known after apply)
+        + public_key_openssh         = (known after apply)
+        + public_key_pem             = (known after apply)
+        + rsa_bits                   = 4096
+      }
+  
+  Plan: 1 to add, 0 to change, 0 to destroy.
+  
+  Do you want to perform these actions?
+    Terraform will perform the actions described above.
+    Only 'yes' will be accepted to approve.
+  
+    Enter a value: yes
+  
+  tls_private_key.pvtkey: Creating...
+  tls_private_key.pvtkey: Creation complete after 3s [id=ff2fc283658f421c4f584a8de9d1c7f539160b0d]
+  
+  Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
+  ```
+  Check the documentation to see what are the attribute references for this resources
+  ```
+  https://registry.terraform.io/providers/hashicorp/tls/latest/docs/resources/private_key#attributes-reference
+  ```
+  ```
+  vi key.tf
+  ```
+  ```
+  resource "tls_private_key" "pvtkey" {
+    algorithm = "RSA"
+    rsa_bits  = 4096
+  }
+  
+  resource "local_file" "key_details" {
+    content  = tls_private_key.pvtkey.private_key_pem
+    filename = "/tmp/key.txt"
+  }
+  ```
+  ```
+  terraform init
+  ```
+  ```
+  Initializing provider plugins...
+  - Using previously-installed hashicorp/tls v3.1.0
+  - Finding latest version of hashicorp/local...
+  - Installing hashicorp/local v2.1.0...
+  - Installed hashicorp/local v2.1.0 (self-signed, key ID 34365D9472D7468F)
+  
+  Partner and community providers are signed by their developers.
+  If you'd like to know more about provider signing, you can read about it here:
+  https://www.terraform.io/docs/plugins/signing.html
+  
+  The following providers do not have any version constraints in configuration,
+  so the latest version was installed.
+  
+  To prevent automatic upgrades to new major versions that may contain breaking
+  changes, we recommend adding version constraints in a required_providers block
+  in your configuration, with the constraint strings suggested below.
+  
+  * hashicorp/local: version = "~> 2.1.0"
+  * hashicorp/tls: version = "~> 3.1.0"
+  
+  Terraform has been successfully initialized!
+  
+  You may now begin working with Terraform. Try running "terraform plan" to see
+  any changes that are required for your infrastructure. All Terraform commands
+  should now work.
+  
+  If you ever set or change modules or backend configuration for Terraform,
+  rerun this command to reinitialize your working directory. If you forget, other
+  commands will detect it and remind you to do so if necessary.
+  ```
+  ```
+  terraform apply 
+  ```
+  ```
+  tls_private_key.pvtkey: Refreshing state... [id=ff2fc283658f421c4f584a8de9d1c7f539160b0d]
+
+  An execution plan has been generated and is shown below.
+  Resource actions are indicated with the following symbols:
+    + create
+  
+  Terraform will perform the following actions:
+  
+    # local_file.key_details will be created
+    + resource "local_file" "key_details" {
+        + content              = <<~EOT
+              -----BEGIN RSA PRIVATE KEY-----
+              MIIJJQIBAAKCAgEAsxgMeIg4mT7uu/nqKH6GqBDBvPbhYDwqtSgeNOfFrPSMPxmP
+              fgb6o/YGPPEn3cKXVrhZuCOPUxyHwJqpQ8jh1oZ0rPpJyehcOgZwxbG2QS98jUTo
+              hx/khIQFNCTuRNirXi4URy5d3+bU1nJoO06sP0nN0HnTtw+KFmxyjTjQJLpuPs5k
+              V2jnqlQEIqutlUrlYYWPuxAboqYRAoIBAGi26xJQizLg067ZZl03QBk3CXFPHbip
+              tO1E74vy4pTivwo1HXRD78B2ONo0GfPczlnjKPua0RTvam7QL9Vd5Tn1eT+Cqb2u
+              0hjOd0+iFovDRVfuoko36q4OgXq1SQB1X/tO8OHp2jReyWvauMgKQ9cUrUJThB88
+              2/9n4rpBYujUcgU+8jdRbEINXPyQLUGAfJR7Y7vfE5mWReR+pqH3V/06uVsZmzdM
+              bd434xTvmHU13kktIJ1MlS73e9Y8v+/j4Q4KI/+C86CpbKcpfo+M3f2TaK8DpXql
+              wxYxk6yWw0uf4J/TkVFaYKODCrPGqFELJguaSrdPLPhPv9bCcFmW88o=
+              -----END RSA PRIVATE KEY-----
+          EOT
+        + directory_permission = "0777"
+        + file_permission      = "0777"
+        + filename             = "/tmp/key.txt"
+        + id                   = (known after apply)
+      }
+  
+  Plan: 1 to add, 0 to change, 0 to destroy.
+  
+  Do you want to perform these actions?
+    Terraform will perform the actions described above.
+    Only 'yes' will be accepted to approve.
+  
+    Enter a value: yes
+  
+  local_file.key_details: Creating...
+  local_file.key_details: Creation complete after 0s [id=0cbb95eb033eea52f7307dcd29df23dae36f47a8]
+  
+  Apply complete! Resources: 1 added, 0 changed, 0 destroyed.
+  ```
+  ```
+  terraform destroy
+  ```
+  ```
+  tls_private_key.pvtkey: Refreshing state... [id=ff2fc283658f421c4f584a8de9d1c7f539160b0d]
+  local_file.key_details: Refreshing state... [id=0cbb95eb033eea52f7307dcd29df23dae36f47a8]
+  
+  An execution plan has been generated and is shown below.
+  Resource actions are indicated with the following symbols:
+    - destroy
+  
+  Terraform will perform the following actions:
+  
+    # local_file.key_details will be destroyed
+    - resource "local_file" "key_details" {
+        - content              = <<~EOT
+              -----BEGIN RSA PRIVATE KEY-----
+              MIIJJQIBAAKCAgEAsxgMeIg4mT7uu/nqKH6GqBDBvPbhYDwqtSgeNOfFrPSMPxmP
+              tO1E74vy4pTivwo1HXRD78B2ONo0GfPczlnjKPua0RTvam7QL9Vd5Tn1eT+Cqb2u
+              0hjOd0+iFovDRVfuoko36q4OgXq1SQB1X/tO8OHp2jReyWvauMgKQ9cUrUJThB88
+              2/9n4rpBYujUcgU+8jdRbEINXPyQLUGAfJR7Y7vfE5mWReR+pqH3V/06uVsZmzdM
+              bd434xTvmHU13kktIJ1MlS73e9Y8v+/j4Q4KI/+C86CpbKcpfo+M3f2TaK8DpXql
+              wxYxk6yWw0uf4J/TkVFaYKODCrPGqFELJguaSrdPLPhPv9bCcFmW88o=
+              -----END RSA PRIVATE KEY-----
+          EOT -> null
+        - directory_permission = "0777" -> null
+        - file_permission      = "0777" -> null
+        - filename             = "/tmp/key.txt" -> null
+        - id                   = "0cbb95eb033eea52f7307dcd29df23dae36f47a8" -> null
+      }
+  
+    # tls_private_key.pvtkey will be destroyed
+    - resource "tls_private_key" "pvtkey" {
+        - algorithm                  = "RSA" -> null
+        - ecdsa_curve                = "P224" -> null
+        - id                         = "ff2fc283658f421c4f584a8de9d1c7f539160b0d" -> null
+        - private_key_pem            = (sensitive value)
+        - public_key_fingerprint_md5 = "b2:9e:c9:e2:40:de:f3:36:e9:6f:11:8c:9f:59:58:53" -> null
+        - public_key_openssh         = <<~EOT
+              ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCzGAx4iDiZPu67+eoofoaoEMG89uFgPCq1KB4058Ws9Iw/GY9+Bvqj9gY88SfdwpdWuFm4I49THIfAmqlDyOHWhnSs+knJ6Fw6BnDFsbZBL3yNROjngaZEAK62sMyPmsiGcYnn/50q8PZfKDM8wjJzrlxfG9JEmSXT18wVeQF69P/+3Bgc4XnrmPl5eMH2H/sA1Sfs593LLvszV79na9kC2hpJG7LjX/UHqsPWv2fIQHpPjumitKNYCLbDEJe7wkLDVLgxdWvjNe1DQGcLFpg9k5XoT/X3lQetHc/6x7i6wl6VbOBeDEONv6F6LX6DxwoEv2GKqjusxi+i+KiZ2x9s5+trkg4cxpTfy5rfyWJ+ic1mXqJrm8mAtAtQkJE4+7PMq+2RO9G58JaT5XZXqtHLGflmbDX7Z2R77rp5vFURjxc6qAy4mSWTgJKQ725KTNbZsssQ4IgS3iVConSczxf/9JqocUW0j+M8pV/aO/sJ8kXDQ7QEPuqnHk/Q4jqUxnD9zUgKnfKmZDor7Tjabwt7qtHbcmwfGtc5NKUU5pQ2c9/seoY5nlE7MoyOocf7NF51pymbc3JRmLYrRDl0bhlUSNIGXT/fU8CT49xcBHvs7chZB1yReG1Aj/YBHdu4AEI69mj1ZOqc1P+n+XgMCwCDtvVbTaUd3j2YJABPybvagw==
+          EOT -> null
+        - public_key_pem             = <<~EOT
+              -----BEGIN PUBLIC KEY-----
+              MIICIjANBgkqhkiG9w0BAQEFAAOCAg8AMIICCgKCAgEAsxgMeIg4mT7uu/nqKH6G
+              qBDBvPbhYDwqtSgeNOfFrPSMPxmPfgb6o/YGPPEn3cKXVrhZuCOPUxyHwJqpQ8jh
+              e6rR23JsHxrXOTSlFOaUNnPf7HqGOZ5ROzKMjqHH+zRedacpm3NyUZi2K0Q5dG4Z
+              VEjSBl0/31PAk+PcXAR77O3IWQdckXhtQI/2AR3buABCOvZo9WTqnNT/p/l4DAsA
+              g7b1W02lHd49mCQAT8m72oMCAwEAAQ==
+              -----END PUBLIC KEY-----
+          EOT -> null
+        - rsa_bits                   = 4096 -> null
+      }
+  
+  Plan: 0 to add, 0 to change, 2 to destroy.
+  
+  Do you really want to destroy all resources?
+    Terraform will destroy all your managed infrastructure, as shown above.
+    There is no undo. Only 'yes' will be accepted to confirm.
+  
+    Enter a value: yes
+  
+  local_file.key_details: Destroying... [id=0cbb95eb033eea52f7307dcd29df23dae36f47a8]
+  local_file.key_details: Destruction complete after 0s
+  tls_private_key.pvtkey: Destroying... [id=ff2fc283658f421c4f584a8de9d1c7f539160b0d]
+  tls_private_key.pvtkey: Destruction complete after 0s
+  
+  ```
+  ```
+  vi depend.tf
+  ```
+  ```
+  resource "local_file" "whale" {  
+    filename = "/tmp/whale"
+    depends_on = [ local_file.krill ]
+  }
+  resource "local_file" "krill" {
+    filename = "/tmp/krill"
+  }
+  ```
+  ```
+  terraform init 
+  ```
+  ```
+  Initializing the backend...
+
+  Initializing provider plugins...
+  - Finding latest version of hashicorp/local...
+  - Installing hashicorp/local v2.1.0...
+  - Installed hashicorp/local v2.1.0 (self-signed, key ID 34365D9472D7468F)
+  
+  Partner and community providers are signed by their developers.
+  If you'd like to know more about provider signing, you can read about it here:
+  https://www.terraform.io/docs/plugins/signing.html
+  
+  The following providers do not have any version constraints in configuration,
+  so the latest version was installed.
+  
+  To prevent automatic upgrades to new major versions that may contain breaking
+  changes, we recommend adding version constraints in a required_providers block
+  in your configuration, with the constraint strings suggested below.
+  
+  * hashicorp/local: version = "~> 2.1.0"
+  
+  Terraform has been successfully initialized!
+  
+  You may now begin working with Terraform. Try running "terraform plan" to see
+  any changes that are required for your infrastructure. All Terraform commands
+  should now work.
+  
+  If you ever set or change modules or backend configuration for Terraform,
+  rerun this command to reinitialize your working directory. If you forget, other
+  commands will detect it and remind you to do so if necessary.
+  ```
+  ```
+  terraform plan
+  ```
+  followed by
+  ```
+  terraform apply
+  ```
+  ```
+  An execution plan has been generated and is shown below.
+  Resource actions are indicated with the following symbols:
+    + create
+  
+  Terraform will perform the following actions:
+  
+    # local_file.krill will be created
+    + resource "local_file" "krill" {
+        + directory_permission = "0777"
+        + file_permission      = "0777"
+        + filename             = "/tmp/krill"
+        + id                   = (known after apply)
+      }
+  
+    # local_file.whale will be created
+    + resource "local_file" "whale" {
+        + directory_permission = "0777"
+        + file_permission      = "0777"
+        + filename             = "/tmp/whale"
+        + id                   = (known after apply)
+      }
+  
+  Plan: 2 to add, 0 to change, 0 to destroy.
+  
+  Do you want to perform these actions?
+    Terraform will perform the actions described above.
+    Only 'yes' will be accepted to approve.
+  
+    Enter a value: yes
+  
+  local_file.krill: Creating...
+  local_file.krill: Creation complete after 0s [id=da39a3ee5e6b4b0d3255bfef95601890afd80709]
+  local_file.whale: Creating...
+  local_file.whale: Creation complete after 0s [id=da39a3ee5e6b4b0d3255bfef95601890afd80709]
+  ```
+  As we can see in the log, even whale is declared first in the file test.tf, it was created after krill since it's depending on it.
+</xmp>
+   <script src="strapdown/strapdown.min.js"></script>
+</html>
+<!--
+Local Variables:
+mode: markdown
+End:
+->

@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html>
+  <title>Guided Exercise: Variable Precedence</title>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="strapdown/themes/Dark Mode.min.css">
+  <link rel="stylesheet" href="strapdown/themes/Light Mode.min.css">  
+  <xmp theme="superhero" style="display:none;" toc="true">
+      
+
+
+In this exercise, we will discuss the different methods of declaring variables.
+
+
+#Outcomes
+
+You should be able to:
+- Declare env variable
+- Use .auto.tfvars  
+- Use .tfvars  
+- Use command arguments
+
+#Steps
+
+In order to declare variables in a terraform file, we will go over each method individually
+
+1. Environment variables
+  
+  We can declare our varialbs as env variables. The rule is to export variables using the prefix `TF_VAR_` followed by the variable name and a value.
+  ```
+  export TF_VAR_filename="/tmp/pets.txt"
+  ```
+
+2. Declare our variable in a file with the extention `.tfvars` 
+  
+  This type of files is not detected automatically by terraform, therefore we need to reference it when calling terraform commands
+  ```
+  vi cats.tfvars
+  ```
+  ```
+  filename="/tmp/cats.txt"
+  ```
+  After declaring the variable and implementing it in a tf file, we should run the command in this way
+  ```
+  terraform plan -var-file=nam.tfvars
+  ```
+
+3. Declare our variable in a file with the extention `.auto.tfvars` 
+
+  These files are automatically detected by terraform without the need for arguments to the terraform commands.
+  variable.auto.tfvars
+  ```
+  content="Hey there!"
+  ```
+4. Pass in variables as an option to the terraform apply command ( or plan)
+  ```
+  terraform apply -var "filename=/tmp/cars.txt"
+  ```
+
+5. Precedence 
+
+  If there is a duplicated variable declared in multiple places, terraform uses this scale in order to determine which variable to use.
+  The scale of priority goes from 1 to 4, with 1 being the highest, 4 being the lowest priority. 
+  
+    ○ <b>1-</b> command line flag of -var or 
+    
+    ○ <b>2-</b> using .auto.tfvars
+  
+    ○ <b>3-</b> using terraform.tfvars
+   
+    ○ <b>4-</b> env variables
+
+6. Example of using tf files
+
+  Create a tf file with this configuration
+  ```
+  vi main.tf
+  ```
+  ```
+  resource local_file games {
+    filename = var.filename
+    content = var.content
+  } 
+  ```
+  We should now declare the variables used in the main.tf, which are `filename` and `content`
+  ```
+  vi variables.tf
+  ```
+  ```
+  variable filename {
+    type = string
+  }
+  variable content {
+    type = string
+  }
+  ```
+  Now, let's make use of one the methods to declare a variable, the `auto.tfvars` method!
+  ```
+  vi basket.auto.tfvars
+  ```
+  ```
+  filename = "/tmp/basketball.txt"
+  ```
+  Then, let's plan this configuration
+  ```
+  terraform plan
+  ```
+  ```
+  Terraform used the selected providers to generate the following execution plan.
+  Resource actions are indicated with the following symbols:
+    + create
+  
+  Terraform will perform the following actions:
+  
+    # local_file.jedi will be created
+    + resource "local_file" "jedi" {
+        + content              = "phanius"
+        + directory_permission = "0777"
+        + file_permission      = "0777"
+        + filename             = "/tmp/first-jedi"
+        + id                   = (known after apply)
+      }
+  
+  Plan: 1 to add, 0 to change, 0 to destroy.
+  
+  ────────────────────────────────────────────────────────────────────────────────────
+  
+  Note: You didn't use the -out option to save this plan, so Terraform can't guarantee
+  to take exactly these actions if you run "terraform apply" now.
+  ```
+  Let's now apply this plan
+  ```
+  terraform apply
+  ```
+  ```
+  Terraform used the selected providers to generate the following execution plan.
+  Resource actions are indicated with the following symbols:
+    + create
+  
+  Terraform will perform the following actions:
+  
+    # local_file.jedi will be created
+    + resource "local_file" "jedi" {
+        + content              = "phanius"
+        + directory_permission = "0777"
+        + file_permission      = "0777"
+        + filename             = "/tmp/first-jedi"
+        + id                   = (known after apply)
+      }
+  
+  Plan: 1 to add, 0 to change, 0 to destroy.
+  
+  Do you want to perform these actions?
+    Terraform will perform the actions described above.
+    Only 'yes' will be accepted to approve.
+  
+    Enter a value: yes
+  
+  local_file.jedi: Creating...
+  local_file.jedi: Creation complete after 0s [id=23760ef64e0124aa08fecf101c302d3b64220d1a]
+  
+  Apply complete! Resources: 1 added, 0 changed, 0 destroyed.  
+  ```
+  Let's check the value of the created resource:
+  ```
+  cat /tmp/first-jedi
+  ```
+  Output
+  ```
+  phanius
+  ```
+  Bingo! We've succeded at declaring and using a variable instead of hard coding it into our code! 
+
+8. Cleanup
+  ```
+  terraform destroy
+  ```
+  ```
+  local_file.jedi: Refreshing state... [id=23760ef64e0124aa08fecf101c302d3b64220d1a]
+
+  Terraform used the selected providers to generate the following execution plan.
+  Resource actions are indicated with the following symbols:
+    - destroy
+  
+  Terraform will perform the following actions:
+  
+    # local_file.jedi will be destroyed
+    - resource "local_file" "jedi" {
+        - content              = "phanius" -> null
+        - directory_permission = "0777" -> null
+        - file_permission      = "0777" -> null
+        - filename             = "/tmp/first-jedi" -> null
+        - id                   = "23760ef64e0124aa08fecf101c302d3b64220d1a" -> null
+      }
+  
+  Plan: 0 to add, 0 to change, 1 to destroy.
+  
+  Do you really want to destroy all resources?
+    Terraform will destroy all your managed infrastructure, as shown above.
+    There is no undo. Only 'yes' will be accepted to confirm.
+  
+    Enter a value: yes
+  
+  local_file.jedi: Destroying... [id=23760ef64e0124aa08fecf101c302d3b64220d1a]
+  local_file.jedi: Destruction complete after 0s
+  
+  Destroy complete! Resources: 1 destroyed.  
+  ```
+
+</xmp>
+   <script src="strapdown/strapdown.min.js"></script>
+</html>
+<!--
+Local Variables:
+mode: markdown
+End:
+->

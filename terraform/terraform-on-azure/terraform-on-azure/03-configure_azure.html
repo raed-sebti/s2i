@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+  <title>Guided Exercise: Configure AWS Authentication</title>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="strapdown/themes/Dark Mode.min.css">
+  <link rel="stylesheet" href="strapdown/themes/Light Mode.min.css">  
+  <xmp theme="superhero" style="display:none;" toc="true">
+      
+
+In this exercise, you will Install the Azure CLI on our host machine.
+
+#Outcomes
+
+You should be able to:
+- Configure Azure credentials on our host machine
+- Test the configuration
+
+#Installation Options
+
+There are two options to install the Azure CLI on your system. 
+- First, you may execute a single command that will download an install script and run the install commands for you. 
+- Or if you prefer, you can execute the install commands yourself in a step-by-step process.
+
+#Steps
+
+1. Install with one command
+
+  - The Azure CLI team maintains a script to run all installation commands in one step. 
+  - This script is downloaded via curl and piped directly to bash to install the CLI.
+  - If you wish to inspect the contents of the script yourself before executing, simply download the script first using curl and inspect it in your favorite text editor.
+
+  ```
+  curl -sL https://aka.ms/InstallAzureCLIDeb | sudo bash
+  ```
+
+2. Sign in to Azure with the Azure CLI
+- Run the Azure CLI with the az command. To sign in.
+ - Use the az login command.
+  ```
+  az login
+  ```
+ - If the CLI can open your default browser, it will do so and load an Azure sign-in page.
+ - Otherwise, open a browser page at https://aka.ms/devicelogin and enter the authorization code displayed in your terminal.
+ - If no web browser is available or the web browser fails to open, use device code flow with az login --use-device-code.
+
+3. Sign in with your account credentials in the browser.
+ - To learn more about different authentication methods, see Sign in with Azure CLI.
+ - Once logged in - it's possible to list the Subscriptions associated with the account via:
+  ```
+  az account list
+  ```
+ - The output (similar to below) will display one or more Subscriptions - with the id field being the subscription_id field.
+
+  ```
+  [
+    {
+      "cloudName": "AzureCloud",
+      "id": "00000000-0000-0000-0000-000000000000",
+      "isDefault": true,
+      "name": "PAYG Subscription",
+      "state": "Enabled",
+      "tenantId": "00000000-0000-0000-0000-000000000000",
+      "user": {
+        "name": "user@example.com",
+        "type": "user"
+      }
+    }
+  ]
+  ```
+- If you have more than one Subscription, you can specify the Subscription to use via the following command:
+  ```
+  az account set --subscription="SUBSCRIPTION_ID"  
+  ```
+
+1. Review terraform manifests
+  ```
+  mkdir ~/configure-azure && cd ~/configure-azure 
+  ```
+  ```
+  vim main.tf
+  ```
+  ```
+  # Terraform Settings Block
+  terraform {
+    required_version = ">= 1.0.0"
+    required_providers {
+      azurerm = {
+        source = "hashicorp/azurerm"
+        version = ">= 2.0" # Optional but recommended in production
+      }    
+    }
+  }
+  # Configure the Microsoft Azure Provider
+  provider "azurerm" {
+    features {}
+  }
+  # Create Resource Group 
+  resource "azurerm_resource_group" "my_demo_rg1" {
+    location = "eastus"
+    name = "my-demo-rg1"  
+  }
+  ```
+1. Terraform Core Commands
+  - Run the following commands 
+
+  ```
+  # Terraform Initialize
+  terraform init
+
+  # Terraform Validate
+  terraform validate
+
+  # Terraform Plan to Verify what it is going to create / update / destroy
+  terraform plan
+
+  # Terraform Apply to Create Resources
+  terraform apply 
+  ```
+1. Verify Azure Resource Group in Azure Management Console
+  - Go to Azure Management Console -> Resource Groups
+  - Verify newly created Resource Group
+  - Review terraform.tfstate file
+
+1. Destroy Infrastructure  
+  ```
+  # Destroy Azure Resource Group 
+  terraform destroy
+  ```
+  Observation:
+  1. Verify if the resource group got deleted in Azure Management Console
+  2. Verify terraform.tfstate file and resource group info should be removed
+  3. Verify terraform.tfstate.backup, it should have the resource group info here stored as backup. 
+  
+  ```
+  # Delete Terraform files 
+  rm -rf .terraform*
+  rm -rf terraform.tfstate*
+  ```
+  </xmp>
+  <script src="strapdown/strapdown.min.js"></script>
+</html>
+<!--
+Local Variables:
+mode: markdown
+End:
+->

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+  <title>Guided Exercise: Installing Terraform</title>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="strapdown/themes/Dark Mode.min.css">
+  <link rel="stylesheet" href="strapdown/themes/Light Mode.min.css">  
+  <xmp theme="superhero" style="display:none;" toc="true">
+      
+
+
+In this exercise, you will set up your terraform environment.
+
+Terraform is a tool for building, changing, and versioning infrastructure safely and efficiently. 
+
+Terraform can manage existing and popular service providers as well as custom in-house solutions.
+#Outcomes
+
+You should be able to:
+- Install terraform
+- Run a smoke test
+
+#Steps
+
+1. Download Terraform:
+   ```
+   curl -O https://releases.hashicorp.com/terraform/1.0.2/terraform_1.0.2_linux_amd64.zip
+   ```
+
+2. Check where to unzip package:
+   ```
+   echo $PATH
+   ```
+   ```
+   /usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/tmp/bin
+   ```
+3. Unzip the ` terraform_1.0.2_linux_amd64.zip ` file under ` /usr/bin/ `:
+
+   ```
+   unzip  terraform_1.0.2_linux_amd64.zip -d /usr/bin/
+   ```
+4. Verify Installation:
+
+   ```
+   terraform -v
+   ```
+   ```
+   Terraform v1.0.2
+   ```
+5. To add the necessary commands to your shell profile, run the following command:
+   ```
+   terraform -install-autocomplete
+   ```
+   After installation, it is necessary to restart your shell or to re-read its profile script before auto completion will be activated.
+   ```
+   exec bash
+   ```
+
+6. Creating Terraform configuration folder
+
+   Terraform configuration file have `.tf` extension. 
+   Terraform command needs to run in the directory of the config files. It can’t take files from subdirectories.
+   ```
+   mkdir terraform-templates && cd terraform-templates
+   ```
+7. Create empty configuration file:
+   ```
+   touch main.tf
+   ```
+8. Run terraform apply:
+   ```
+   terraform apply
+   ```
+   ```
+   Apply complete! Resources: 0 added, 0 changed, 0 destroyed.
+   ```
+   Congratulations! You've set up your terraform environment. 
+
+
+ 
+  </xmp>
+   <script src="strapdown/strapdown.min.js"></script>
+</html>
+<!--
+Local Variables:
+mode: markdown
+End:
+->

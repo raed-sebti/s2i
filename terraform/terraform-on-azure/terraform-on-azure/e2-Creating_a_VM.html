@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html>
+  <title>Unguided exercise - Cretaing a Linux VM</title>
+  <meta charset="utf-8">
+  <link rel="stylesheet" href="strapdown/themes/Dark Mode.min.css">
+  <link rel="stylesheet" href="strapdown/themes/Light Mode.min.css">  
+  <xmp theme="superhero" style="display:none;" toc="true">
+      
+
+# Lab - Generating local files
+
+1. Create a new terraform workspace named `linux_vm` 
+2. Create a config file named c1-version.tf 
+```
+    # Terraform Block
+    terraform {
+      required_version = ">= <change-me>"
+      required_providers {
+        <change-me>= {
+          source = "<change-me>"
+          version = ">=<change-me>" 
+        }
+        random = {
+          source = "hashicorp/random"
+          version = ">= 3.0"
+        }
+      }
+    }
+
+    # Provider Block
+    provider "<change-me>" {
+    features {}          
+    }
+
+    # Random String Resource
+    resource "random_string" "myrandom" {
+      length = 6
+      upper = false 
+      special = false
+      number = false 
+    }
+```
+2. Create a config file named c2-resource-group.tf
+   - resource locgical name = myrg
+   - resource groupe name (argument) = myrg-1
+   - location = "East US"
+```
+    # Resource-1: Azure Resource Group
+    resource "azurerm_resource_group" "<change-me>" {
+      name = "<change-me>
+      // Add a new arguemt for location
+      
+    }
+```
+2. Create a config file named c3-virtual-network.tf
+```
+    # Create Virtual Network
+    resource "azurerm_virtual_network" "myvnet" {
+      name                = "myvnet-1"
+      address_space       = ["10.0.0.0/16"]
+      location            = <change-me>
+      resource_group_name = <change-me>
+    }
+
+    # Create Subnet
+    resource "azurerm_subnet" "mysubnet" {
+      name                 = "mysubnet-1"
+      resource_group_name  = <change-me>
+      virtual_network_name = <change-me>
+      address_prefixes     = ["10.0.2.0/24"]
+    }
+
+    # Create Azure Public IP Address
+    # The domain_name_label should follow this pattern: app1-vm-<count.index>-<random_string.myrandom.id>
+    resource "azurerm_public_ip" "mypublicip" {
+      count = 2
+      name                = "mypublicip-${count.index}"
+      resource_group_name = <change-me>
+      location            = <change-me>
+      allocation_method   = "Static"
+      domain_name_label = "<change-me>"  
+    }
+
+    # Create Network Interface
+    # The name should follow this pattern vmnic-1 / vmnic-2 /vmnic-3
+    resource "azurerm_network_interface" "myvmnic" {
+      count =2 
+      name                = "<change-me>"
+      location            = <change-me>
+      resource_group_name = <change-me>
+
+      ip_configuration {
+        name                          = "internal"
+        subnet_id                     = <change-me>
+        private_ip_address_allocation = "Dynamic"
+        public_ip_address_id = element(azurerm_public_ip.mypublicip[*].id, count.index)     
+      }
+    }
+```
+2. Create a config file named c4-linux-virtual-machine.tf
+```
+    # Resource: Azure Linux Virtual Machine
+    resource "azurerm_linux_virtual_machine" "mylinuxvm" {
+      count = 2
+      name                = "mylinuxvm-${count.index}"
+      computer_name       = "devlinux-${count.index}" # Hostname of the VM
+      resource_group_name = <change-me>
+      location            = <change-me>
+      size                = "Standard_DS1_v2"
+      admin_username      = "azureuser"
+      network_interface_ids = [ element(azurerm_network_interface.myvmnic[*].id, count.index)]  
+      admin_ssh_key {
+        username   = "azureuser"
+        public_key = file("${path.module}/ssh-keys/terraform-azure.pub")
+      }
+      os_disk {
+        name = "osdisk${count.index}"
+        caching              = "ReadWrite"
+        storage_account_type = "Standard_LRS"
+      }
+      source_image_reference {
+        publisher = "RedHat"
+        offer     = "RHEL"
+        sku       = "83-gen2"
+        version   = "latest"
+      }
+      custom_data = filebase64("${path.module}/app-scripts/app1-cloud-init.txt")
+    }
+```
+2. Create a config file named app1-cloud-init
+```
+    #cloud-config
+    package_upgrade: false
+    packages:
+      - httpd
+    write_files:
+      - owner: root:root 
+        path: /var/www/html/index.html
+        content: |
+          <h1>Welcome to Terraform  - APP-1</h1>
+      - owner: root:root 
+        path: /var/www/html/app1/index.html
+        content: |
+          <!DOCTYPE html> <html> <body style="background-color:rgb(250, 210, 210);"> <h1>Welcome to Terraform - APP-1</h1> <p>Terraform Demo</p> <p>Application Version: V1</p> </body></html>      
+    runcmd:
+      - sudo systemctl start httpd  
+      - sudo systemctl enable httpd
+      - sudo systemctl stop firewalld
+      - sudo mkdir /var/www/html/app1 
+      - [sudo, curl, -H, "Metadata:true", --noproxy, "*", "http://169.254.169.254/metadata/instance?api-version=2020-09-01", -o, /var/www/html/app1/metadata.html]
+``` 
+1. Generate a public and private keys and place them under linux_vm/ssh-keys
+   - public key name:  terraform-azure.pub
+   - private key name: terraform-azure.pem
+1. validate your configuration files 
+1. plan and apply and check your work from the console 
+1. use your private to ssh both Vms 
+1. change the Vm count to 3
+1. validate apply anch check your work 
+1. Destroy the entire environment    
+  </xmp>
+  <script src="strapdown/strapdown.min.js"></script>
+</html>
+<!--
+Local Variables:
+mode: markdown
+End:
+->
